@@ -1,0 +1,948 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>NEW LEMAR Business System</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="NEW LEMAR">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0B1F4D">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: sticky command bar with scrollable tabs above a card grid. A period bar (Gregorian or Solar Hijri) drives dashboard and reports; every cost flows purchase -> unit/job -> invoice so profit is real. */
+:root{
+  --bg:#ECEFF4; --surface:#FFFFFF; --surface2:#F4F6FA; --ink:#0F1728; --muted:#5B6780; --line:#D9DEE8; --logo:#0B1F4D;
+  --accent:#A47716; --accent-soft:#F4EAD0; --win:#08966F; --loss:#D23B55; --warn:#C47F0E; --grid:#E3E7EF; --blue:#3C5FD9;
+  --shadow:0 1px 2px rgba(15,23,40,.06),0 10px 30px rgba(15,23,40,.06);
+  --font:'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif; --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#080D1A; --surface:#111A2F; --surface2:#17223D; --ink:#E7ECF6; --muted:#8B97B1; --line:#24304C; --logo:#FFFFFF;
+  --accent:#E3B65A; --accent-soft:#2F2610; --win:#2FD0A0; --loss:#FF6B82; --warn:#F2B13E; --grid:#1B2640; --blue:#7C97FF;
+  --shadow:0 1px 2px rgba(0,0,0,.45),0 12px 34px rgba(0,0,0,.4); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#080D1A; --surface:#111A2F; --surface2:#17223D; --ink:#E7ECF6; --muted:#8B97B1; --line:#24304C; --logo:#FFFFFF;
+  --accent:#E3B65A; --accent-soft:#2F2610; --win:#2FD0A0; --loss:#FF6B82; --warn:#F2B13E; --grid:#1B2640; --blue:#7C97FF;
+  --shadow:0 1px 2px rgba(0,0,0,.45),0 12px 34px rgba(0,0,0,.4); color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.55;padding-block:0 90px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;display:inline-block}
+.pos{color:var(--win)} .neg{color:var(--loss)} .mut{color:var(--muted)} .warnc{color:var(--warn)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;touch-action:manipulation}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1320px;margin-inline:auto}
+header.bar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(14px);margin-inline:calc(-1*max(16px,env(safe-area-inset-left,0px)));padding-inline:max(16px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--line)}
+.bar-in{max-width:1320px;margin-inline:auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 24px;padding-block:12px 0}
+.brand{display:flex;align-items:center;gap:12px;font-weight:800;font-size:18px;letter-spacing:-.01em}
+.brand svg{width:40px;height:40px;color:var(--logo);flex:none}
+.brand small{display:block;font-size:10px;font-weight:600;letter-spacing:.14em;color:var(--muted);margin-top:-3px}
+.acct{margin-inline-start:auto;display:flex;gap:24px;align-items:center;flex-wrap:wrap}
+.acct small{display:block;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:.12em}
+.acct .big{font-size:17px;font-weight:600}
+.save{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.save b{width:7px;height:7px;border-radius:50%;background:var(--muted);display:inline-block}
+.save.ok b{background:var(--win)}
+nav.tabs{max-width:1320px;margin-inline:auto;display:flex;gap:2px;overflow-x:auto;margin-top:8px;position:relative;scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{background:none;border:0;padding:10px 14px;color:var(--muted);font-weight:700;font-size:13px;white-space:nowrap;transition:color .2s}
+nav.tabs button[aria-selected="true"],nav.tabs button:hover{color:var(--ink)}
+nav.tabs .ind{position:absolute;bottom:0;height:3px;border-radius:3px 3px 0 0;background:var(--accent);transition:left .45s cubic-bezier(.3,1.2,.4,1),width .45s cubic-bezier(.3,1.2,.4,1)}
+main{padding-top:22px;display:flex;flex-direction:column;gap:16px}
+main>*,.stag{animation:rise .55s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i,0)*55ms)}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}}
+.banner{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 60%,transparent);border-radius:12px;padding:10px 16px;font-size:13px}
+.banner button{margin-inline-start:auto}
+.grid{display:grid;gap:16px;min-width:0}
+.g-kpi{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.g-2{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}
+.g-eq{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.g-auto{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+@media(max-width:880px){.g-2,.g-eq{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow);min-width:0;position:relative}
+.card::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .35s;background:radial-gradient(380px circle at var(--mx,50%) var(--my,0%),color-mix(in srgb,var(--accent) 10%,transparent),transparent 62%)}
+.card:hover::before{opacity:1}
+.card h3{margin:0 0 14px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.kpi small{display:block;color:var(--muted);font-size:10px;letter-spacing:.12em;font-weight:700;text-transform:uppercase}
+.kpi .v{font-size:23px;font-weight:600;line-height:1.35;letter-spacing:-.02em}
+.kpi .s{font-size:11px;color:var(--muted);min-height:16px}
+.delta{font-weight:700}
+.btn{border:1px solid var(--line);background:var(--surface2);border-radius:9px;padding:8px 15px;font-weight:700;font-size:13px;transition:transform .18s,box-shadow .18s}
+.btn:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.12)}
+.btn:active{transform:scale(.97)}
+.btn.pri{background:linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--accent) 70%,#fff));border-color:transparent;color:#171103}
+.btn.danger{color:var(--loss)}
+.btn.sm{padding:3px 11px;font-size:12px}
+.seg{display:inline-flex;background:var(--surface2);border:1px solid var(--line);border-radius:9px;padding:2px}
+.seg button{border:0;background:none;padding:4px 14px;border-radius:7px;font-size:12px;font-weight:700;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:5px 14px;font-size:12px;font-weight:700;color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.status{display:inline-block;padding:1px 10px;border-radius:99px;font-size:10px;font-weight:800;letter-spacing:.06em;background:var(--grid);white-space:nowrap}
+.status.Paid,.status.OK,.status.Sold,.status.Delivered,.status.Done{background:color-mix(in srgb,var(--win) 18%,transparent);color:var(--win)}
+.status.Partial,.status.LOW,.status.Instock,.status.Inprogress{background:color-mix(in srgb,var(--warn) 22%,transparent);color:var(--warn)}
+.status.Unpaid,.status.OUT{background:color-mix(in srgb,var(--loss) 18%,transparent);color:var(--loss)}
+.status.Planned{background:color-mix(in srgb,var(--blue) 18%,transparent);color:var(--blue)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;text-align:start;padding:9px 11px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px 11px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:middle}
+th.r,td.r{text-align:end}
+tbody tr[data-edit],tbody tr[data-inv],tbody tr[data-pur],tbody tr[data-unit],tbody tr[data-job]{cursor:pointer}
+tbody tr{animation:rise .35s backwards;animation-delay:calc(var(--i,0)*14ms)}
+tbody tr:hover{background:var(--surface2)}
+tfoot td{font-weight:700;border-top:2px solid var(--line);border-bottom:0}
+.scroll{overflow-x:auto}
+.jal{display:block;font-size:11px;color:var(--accent);text-transform:none;letter-spacing:0;font-weight:600;min-height:16px}
+.sub{font-size:11px;color:var(--muted);display:block;line-height:1.2}
+.brow{display:grid;grid-template-columns:minmax(100px,1.2fr) 3fr minmax(90px,.9fr);gap:10px;align-items:center;padding:5px 0;font-size:12px}
+.brow .lab{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.brow .r{text-align:end;white-space:nowrap}
+.bz{position:relative;height:14px;background:var(--grid);border-radius:5px;overflow:hidden}
+.bz .b{position:absolute;top:2px;bottom:2px;left:0;width:0;border-radius:3px;transition:width 1.1s cubic-bezier(.2,.8,.2,1);transition-delay:calc(var(--i,0)*50ms)}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart text{fill:var(--muted);font-family:var(--mono);font-size:10px}
+.legend{display:flex;gap:16px;font-size:11px;color:var(--muted);flex-wrap:wrap;margin-top:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-inline-end:6px}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filters select,.filters input{width:auto;min-width:130px}
+.f{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:13px}
+label{display:flex;flex-direction:column;gap:5px;font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+input,select,textarea{background:var(--surface2);border:1px solid var(--line);border-radius:9px;padding:9px 11px;color:var(--ink);width:100%;min-width:0;font-size:13px;letter-spacing:0;text-transform:none;font-weight:500}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent);outline:0}
+input:read-only{opacity:.7}
+textarea{resize:vertical;min-height:70px}
+.act{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;align-items:center}
+.pbar .f{align-items:end}
+.ptxt{font-size:12px;color:var(--muted)}
+.ov{position:fixed;inset:0;background:rgba(6,10,20,.62);backdrop-filter:blur(3px);z-index:40;display:grid;place-items:start center;overflow:auto;padding:16px 12px 24px;animation:fade .25s}
+.ov .card{width:min(1040px,100%);margin-top:2vh;animation:modal .4s cubic-bezier(.2,1.2,.3,1) both}
+@keyframes fade{from{opacity:0}}
+@keyframes modal{from{opacity:0;transform:translateY(26px) scale(.97)}}
+.toast{position:fixed;bottom:22px;left:50%;transform:translate(-50%,24px);background:var(--ink);color:var(--bg);padding:10px 20px;border-radius:99px;font-size:13px;font-weight:700;opacity:0;transition:all .4s cubic-bezier(.3,1.4,.5,1);z-index:60;pointer-events:none;max-width:92vw;text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.fab{position:fixed;bottom:max(20px,calc(env(safe-area-inset-bottom,0px) + 12px));inset-inline-end:max(18px,env(safe-area-inset-right,0px));z-index:25;border-radius:99px;padding:13px 24px;font-weight:800;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.sec-title{font-size:22px;font-weight:800;margin:0;letter-spacing:-.02em}
+.hd{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.empty{padding:30px;text-align:center;color:var(--muted)}
+.lines input,.lines select,.lines textarea{padding:6px 8px;font-size:13px}
+.lines td{padding:5px 6px;vertical-align:top}
+.lines .q{width:74px}.lines .m{width:96px}.lines textarea{min-height:44px;min-width:130px;font-family:var(--mono);font-size:12px}
+.tot{display:grid;grid-template-columns:1fr auto;gap:4px 24px;margin-top:12px;margin-inline-start:auto;width:min(360px,100%);font-size:13px}
+.kv{display:grid;grid-template-columns:1fr auto;gap:5px 24px;font-size:13px}
+.kv b{font-weight:800}
+.doc{background:#fff;color:#111;border-radius:6px;padding:28px;max-width:820px;margin:0 auto;font-size:13px}
+.doc *{color:inherit}
+.doc .dh{display:flex;justify-content:space-between;gap:20px;border-bottom:3px solid #0B1F4D;padding-bottom:14px;margin-bottom:16px;flex-wrap:wrap}
+.doc .lg{display:flex;gap:14px;align-items:flex-start}
+.doc .lg svg{width:70px;height:70px;color:#0B1F4D;flex:none}
+.doc h1{margin:0;font-size:26px;letter-spacing:.04em;color:#0B1F4D}
+.doc .tg{font-size:11px;color:#444}
+.doc table{font-size:13px}
+.doc th{color:#333;border-bottom:2px solid #0B1F4D;background:#f2f2f2}
+.doc td{border-bottom:1px solid #ccc;white-space:normal}
+.doc .tt{margin-top:14px;margin-inline-start:auto;width:min(320px,100%);display:grid;grid-template-columns:1fr auto;gap:4px 20px}
+.doc .sig{display:flex;gap:40px;margin-top:50px}
+.doc .sig div{flex:1;border-top:1px solid #111;padding-top:4px;font-size:11px;color:#444}
+.doc .mono{font-family:var(--mono)}
+.printhead{display:none}
+@media(max-width:640px){
+  input,select,textarea{font-size:16px}
+  body{padding-block:0 100px}
+  header.bar{backdrop-filter:none;background:var(--surface)}
+  .bar-in{gap:6px 12px;padding-block:10px}.brand small{display:none}.brand{font-size:16px}.brand svg{width:34px;height:34px}
+  .acct{margin-inline-start:0;width:100%;justify-content:space-between;gap:10px}.acct .big{font-size:15px}
+  .g-kpi{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi .v{font-size:19px}
+  .card{padding:14px}input,select,textarea{font-size:16px}
+  .brow{grid-template-columns:minmax(80px,1fr) 1.3fr minmax(90px,1fr)}.sec-title{font-size:19px}
+  .doc{padding:16px}
+}
+@media print{
+  :root:root:root:root{--bg:#fff;--surface:#fff;--surface2:#f4f4f4;--ink:#000;--muted:#444;--line:#bbb;--grid:#ddd;--win:#06704f;--loss:#b32040;--accent:#7a5a10;--shadow:none}
+  body{background:#fff;padding:0}
+  header.bar,.fab,.toast,.noprint,nav.tabs{display:none!important}
+  body.modal-open .wrap{display:none}
+  .ov{position:static;background:none;padding:0;display:block;backdrop-filter:none;animation:none}
+  .ov .card{box-shadow:none;border:0;padding:0;margin:0;width:100%;animation:none}
+  .ov .card>h3{display:none}
+  .card{box-shadow:none;break-inside:avoid}.card::before{display:none}
+  main>*,.stag,tbody tr{animation:none}
+  .printhead{display:block;margin-bottom:10px}
+  .doc{padding:0;max-width:none}
+  .scroll{overflow:visible}
+}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}}
+</style></head><body>
+<svg style="display:none" aria-hidden="true"><symbol id="nl" viewBox="201 164 900 900"><g fill="currentColor"><path d="M429 243H706Q722 243 722 259V272Q722 288 706 288H429Q413 288 413 272V259Q413 243 429 243Z"/><path d="M432 280V287C474 288 510 298 510 345H522V280Z"/><path d="M704 280V287C662 288 628 298 628 345H616V280Z"/><path d="M510 280H628V960H510Z"/><path d="M510 850C510 918 480 940 430 940Q410 940 410 958V968Q410 985 428 985H968Q982 985 986 970L1016 836Q1020 819 1003 813Q976 804 956 808Q944 811 938 826L920 872C898 920 880 940 836 940H696C650 940 628 920 628 878V850Z"/><path d="M297 330H398Q412 330 412 344V351Q412 365 398 365H297Q283 365 283 351V344Q283 330 297 330Z"/><path d="M300 356V364C338 365 357 380 357 424H369V356Z"/><path d="M357 360H400V850H357Z"/><path d="M297 840H469Q483 840 483 854V864Q483 878 469 878H297Q283 878 283 864V854Q283 840 297 840Z"/><path d="M300 850V841C338 840 357 826 357 782H369V850Z"/><path d="M466 850V841C430 840 400 826 400 782H388V850Z"/><path d="M679 330H851Q865 330 865 344V351Q865 365 851 365H679Q665 365 665 351V344Q665 330 679 330Z"/><path d="M682 356V364C712 365 730 380 730 424H742V356Z"/><path d="M848 356V364C816 365 790 380 790 424H778V356Z"/><path d="M730 360H790V872Q790 880 782 880H758Q751 880 747 872L730 845Z"/><path d="M392 330H410C446 336 474 392 508 432L734 700V740L752 876C716 818 668 752 628 706L510 576L395 432V330Z"/></g></symbol></svg>
+<div class="wrap">
+  <header class="bar">
+    <div class="bar-in">
+      <div class="brand"><svg role="img" aria-label="NEW LEMAR logo"><use href="#nl"/></svg><div><span id="coName">NEW LEMAR</span><small>BUSINESS SYSTEM</small></div></div>
+      <div class="acct">
+        <div><small>RECEIVABLES</small><span class="big num" id="hRec">0</span></div>
+        <div><small>STOCK VALUE</small><span class="big num" id="hStk">0</span></div>
+        <div class="save" id="saveSt"><b></b><span>Ready</span></div>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs" role="tablist"></nav>
+  </header>
+  <main id="view"></main>
+</div>
+<button class="btn pri fab" id="fab">+ New invoice</button>
+<div id="modal"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+/* Storage layer: the Windows desktop app provides window.NLDESK (data kept in a real file); a browser uses localStorage. */
+const ST=window.NLDESK?window.NLDESK.store:{desktop:false,get:k=>localStorage.getItem(k),set:(k,v)=>localStorage.setItem(k,v),keys:()=>{const o=[];for(let i=0;i<localStorage.length;i++)o.push(localStorage.key(i));return o}};
+/* ================= helpers ================= */
+const $=(s,r)=>(r||document).querySelector(s), $$=(s,r)=>Array.from((r||document).querySelectorAll(s));
+const pad=n=>n<10?'0'+n:''+n, ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()), today=()=>ymd(new Date());
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sum=(a,f)=>a.reduce((t,x)=>t+(f?f(x):x),0), r2=v=>Math.round(v*100)/100;
+const usd=(v,sign)=>{const a=Math.abs(v||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});return (v<0&&r2(v)!==0?'-':(sign&&v>0.004?'+':''))+'$'+a};
+const afn=v=>'AFN '+Math.round(v||0).toLocaleString('en-US');
+const cls=v=>v>0.005?'pos':v<-0.005?'neg':'mut';
+const JM=['Hamal','Sawr','Jawza','Saratan','Asad','Sonbola','Mizan','Aqrab','Qaws','Jadi','Dalwa','Hut'];
+const GM=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function g2j(gy,gm,gd){const gdm=[0,31,59,90,120,151,181,212,243,273,304,334];let jy=gy<=1600?0:979;gy-=gy<=1600?621:1600;const gy2=gm>2?gy+1:gy;
+  let days=365*gy+Math.floor((gy2+3)/4)-Math.floor((gy2+99)/100)+Math.floor((gy2+399)/400)-80+gd+gdm[gm-1];
+  jy+=33*Math.floor(days/12053);days%=12053;jy+=4*Math.floor(days/1461);days%=1461;if(days>365){jy+=Math.floor((days-1)/365);days=(days-1)%365}
+  const jm=days<186?1+Math.floor(days/31):7+Math.floor((days-186)/30),jd=1+(days<186?days%31:(days-186)%30);return[jy,jm,jd]}
+function j2g(jy,jm,jd){jy+=1595;let days=-355668+365*jy+Math.floor(jy/33)*8+Math.floor(((jy%33)+3)/4)+jd+(jm<7?(jm-1)*31:(jm-7)*30+186);
+  let gy=400*Math.floor(days/146097);days%=146097;if(days>36524){gy+=100*Math.floor(--days/36524);days%=36524;if(days>=365)days++}
+  gy+=4*Math.floor(days/1461);days%=1461;if(days>365){gy+=Math.floor((days-1)/365);days=(days-1)%365}
+  let gd=days+1;const sal=[0,31,((gy%4===0&&gy%100!==0)||gy%400===0)?29:28,31,30,31,30,31,31,30,31,30,31];let gm;for(gm=0;gm<13&&gd>sal[gm];gm++)gd-=sal[gm];return[gy,gm,gd]}
+function jal(s){if(!s||!/^\d{4}-\d{2}-\d{2}$/.test(s))return '';const p=s.split('-').map(Number),j=g2j(p[0],p[1],p[2]);return j[2]+' '+JM[j[1]-1]+' '+j[0]}
+const dual=s=>s?'<span class="num">'+esc(s)+'</span><span class="sub">'+jal(s)+'</span>':'';
+const mkey=s=>s.slice(0,7);
+const addDays=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return ymd(d)};
+const diffDays=(a,b)=>Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/864e5);
+/* calendar arithmetic (cal = 'greg' | 'jalali') */
+const toCal=(cal,s)=>{const p=s.split('-').map(Number);return cal==='jalali'?g2j(p[0],p[1],p[2]):p};
+const fromCal=(cal,y,m,d)=>{if(cal==='jalali'){const g=j2g(y,m,d);return g[0]+'-'+pad(g[1])+'-'+pad(g[2])}return y+'-'+pad(m)+'-'+pad(d)};
+const mStart=(cal,y,m)=>{y+=Math.floor((m-1)/12);m=((m-1)%12+12)%12+1;return fromCal(cal,y,m,1)};
+const mEnd=(cal,y,m)=>addDays(mStart(cal,y,m+1),-1);
+const monthName=(cal,y,m)=>cal==='jalali'?JM[m-1]+' '+y:GM[m-1]+' '+y;
+function rangeFor(preset,cal,fs,S0){
+  const t=today(),c=toCal(cal,t),y=c[0],m=c[1];
+  const R=(f,to,pf,pt)=>({from:f,to:to,prev:pf?{from:pf,to:pt}:null});
+  switch(preset){
+    case 'today':return R(t,t,addDays(t,-1),addDays(t,-1));
+    case 'week':{const wd=new Date(t+'T12:00:00').getDay(),st=cal==='jalali'?(wd+1)%7:(wd+6)%7,f=addDays(t,-st);return R(f,addDays(f,6),addDays(f,-7),addDays(f,-1))}
+    case 'month':return R(mStart(cal,y,m),mEnd(cal,y,m),mStart(cal,y,m-1),mEnd(cal,y,m-1));
+    case 'lastmonth':return R(mStart(cal,y,m-1),mEnd(cal,y,m-1),mStart(cal,y,m-2),mEnd(cal,y,m-2));
+    case 'quarter':{const off=(m-fs+12)%12,q=m-(off%3);return R(mStart(cal,y,q),mEnd(cal,y,q+2),mStart(cal,y,q-3),mEnd(cal,y,q-1))}
+    case 'year':{const off=(m-fs+12)%12,s=m-off;return R(mStart(cal,y,s),mEnd(cal,y,s+11),mStart(cal,y,s-12),mEnd(cal,y,s-1))}
+    case 'lastyear':{const off=(m-fs+12)%12,s=m-off-12;return R(mStart(cal,y,s),mEnd(cal,y,s+11),mStart(cal,y,s-12),mEnd(cal,y,s-1))}
+    case 'last12':return R(mStart(cal,y,m-11),t,mStart(cal,y,m-23),addDays(mStart(cal,y,m-11),-1));
+    case 'all':{let min=t;S0.invoices.forEach(i=>{if(i.date<min)min=i.date});S0.expenses.forEach(i=>{if(i.date<min)min=i.date});S0.payments.forEach(i=>{if(i.date<min)min=i.date});S0.purchases.forEach(i=>{if(i.date<min)min=i.date});return R(min,t,null)}
+    default:{const f=P.from,to=P.to,n=diffDays(f,to)+1;return R(f,to,addDays(f,-n),addDays(f,-1))}
+  }
+}
+function monthsIn(cal,from,to){const out=[],c=toCal(cal,from);let y=c[0],m=c[1],k=0;while(mStart(cal,y,m)<=to&&k++<120){const st=mStart(cal,y,m);out.push({y:y+Math.floor((m-1)/12),m:((m-1)%12+12)%12+1,from:st,to:mEnd(cal,y,m)});m++}return out}
+
+/* ================= state ================= */
+const KEY='newlemar_v1',KEY0='newlemar_v1';
+let DEMO_UNSAVED=false,S=null,view='dash',sub='pur',q='',fil='all',mHandler=null,lastRep=null,CC=null;
+const P={preset:'month',from:today(),to:today(),compare:true};
+const R={type:'summary',cust:''};
+const DEF={
+  types:['Company','Individual','Government','NGO'],
+  pcats:['Container Sale','Container Modification','Modular Office','Mobile Toilet','Custom Fabrication','Materials','Other'],
+  units:['pcs','set','job','m2','m','kg','sheet','liter'],
+  ecats:['Rent','Salaries','Wages (workers)','Transport','Fuel','Materials','Utilities','Maintenance','Customs and fees','Other'],
+  methods:['Cash','Bank transfer','Hawala','Cheque'],
+  jtypes:['Modular office','Mobile toilet','Container modification','Custom fabrication','Other']
+};
+const KINDS=[['Service','Service or job (no stock)'],['Stock','Stock item (counted by quantity)'],['Unit','Individual unit (container with serial number)']];
+const JSTAT=['Planned','In progress','Done','Delivered'];
+const newId=()=>S.nid++;
+const L=k=>S.settings.lists[k];
+const cal=()=>S.settings.calendar||'greg';
+function blank(){return{settings:{company:'NEW LEMAR',tagline:'Containers · Modular Offices · Mobile Toilets · Custom Fabrication',address:'Kabul, Afghanistan',phones:['+93784327492','+93730832527','+93770497580'],rate:70,nextInvoice:1,theme:'auto',calendar:'greg',fiscal:1,alloc:'qty',lists:JSON.parse(JSON.stringify(DEF))},
+  nid:100,demo:false,customers:[],products:[],suppliers:[],invoices:[],payments:[],purchases:[],expenses:[],adjust:[],units:[],jobs:[],materials:[]}}
+function demo(){
+  const d=n=>{const x=new Date();x.setDate(x.getDate()-n);return ymd(x)};
+  const st=blank();st.demo=true;st.settings.nextInvoice=45;S=st;
+  const cu=(name,type,prov)=>{const o={id:newId(),name,type,phone:'',province:prov,address:'',notes:'Example'};st.customers.push(o);return o.id};
+  const cA=cu('Example Customer A','Company','Kabul'),cB=cu('Example Customer B','Individual','Kabul'),cC=cu('Example Customer C','NGO','Herat');
+  const pr=(name,category,unit,price,cost,kind,spec)=>{const o={id:newId(),name,category,unit,price,cost,kind,reorder:0,spec:spec||'',notes:''};st.products.push(o);return o.id};
+  const p20=pr('20ft container (used)','Container Sale','pcs',1300,0,'Unit','20ft steel'),p40=pr('40ft container (used)','Container Sale','pcs',2100,0,'Unit','40ft steel'),
+    pSteel=pr('Steel sheet','Materials','sheet',0,40,'Stock','2mm sheet'),pPaint=pr('Paint (20 liter)','Materials','pcs',0,60,'Stock',''),
+    pMod=pr('Container modification','Container Modification','job',850,0,'Service',''),pOff=pr('Modular office 20ft','Modular Office','pcs',2100,0,'Service',''),pTo=pr('Mobile toilet','Mobile Toilet','pcs',1310,0,'Service','');
+  st.products.find(p=>p.id===pSteel).reorder=5;
+  const sup=newId();st.suppliers.push({id:sup,name:'Example Supplier',phone:'',address:'Kabul',notes:'Example'});
+  const pur=(days,lines,paid,cur,rate)=>{const o={id:newId(),date:d(days),supplierId:sup,cur:cur||'USD',rate:rate||70,paid,method:'Bank transfer',notes:'Example',lines};st.purchases.push(o);syncUnits(o);return o.id};
+  const pu1=pur(50,[{prodId:p20,desc:'20ft container (used)',qty:3,price:950,nos:['EXMU1000001','EXMU1000002','EXMU1000003']},{prodId:p40,desc:'40ft container (used)',qty:2,price:1600,nos:['EXMU2000001','EXMU2000002']}],4000);
+  pur(48,[{prodId:pSteel,desc:'Steel sheet',qty:20,price:2900,nos:[]},{prodId:pPaint,desc:'Paint (20 liter)',qty:4,price:4200,nos:[]}],0,'AFN',70);
+  const ex=(days,cat,payee,amt,cur,link,lid)=>st.expenses.push({id:newId(),date:d(days),category:cat,payee,desc:'',amount:amt,currency:cur,rate:70,usd:cur==='USD'?amt:r2(amt/70),method:'Cash',linkType:link||'none',linkId:lid||'',notes:''});
+  ex(50,'Transport','Truck from port',500,'USD','purchase',pu1);
+  const uid=no=>st.units.find(u=>u.no===no).id;
+  ex(44,'Wages (workers)','Welder',7000,'AFN','unit',uid('EXMU1000002'));
+  const mat=(days,prodId,qty,tt,tid)=>{const p=st.products.find(x=>x.id===prodId);st.materials.push({id:newId(),date:d(days),prodId,qty,targetType:tt,targetId:tid,cost:r2(qty*(p.cost||0)),notes:''})};
+  mat(43,pPaint,1,'unit',uid('EXMU1000002'));
+  const job=(name,type,cust,status,days)=>{const o={id:newId(),name,type,customerId:cust,status,start:d(days),due:'',notes:''};st.jobs.push(o);return o.id};
+  const jT=job('Mobile toilet for Customer A','Mobile toilet',cA,'Delivered',45),jM=job('Modification for Customer A','Container modification',cA,'Delivered',20),jO=job('Modular office for Customer B','Modular office',cB,'In progress',14);
+  ex(40,'Wages (workers)','Workers',24000,'AFN','job',jT);ex(39,'Materials','Hardware',120,'USD','job',jT);mat(40,pSteel,8,'job',jT);
+  ex(18,'Wages (workers)','Workers',14000,'AFN','job',jM);mat(18,pSteel,4,'job',jM);
+  ex(10,'Wages (workers)','Workers',35000,'AFN','job',jO);mat(10,pSteel,6,'job',jO);mat(9,pPaint,2,'job',jO);
+  ex(36,'Rent','Landlord',400,'USD');ex(28,'Salaries','Staff',900,'USD');ex(9,'Fuel','Fuel station',60,'USD');ex(6,'Utilities','Electricity',75,'USD');
+  const inv=(no,days,cust,lines)=>{const o={id:newId(),no,date:d(days),customerId:cust,rate:70,notes:'',lines};st.invoices.push(o);return o.id};
+  const i40=inv(40,38,cA,[{kind:'job',jobId:jT,desc:'Mobile toilet for Customer A',qty:1,price:1310}]),
+        i41=inv(41,29,cB,[{kind:'unit',unitId:uid('EXMU2000001'),desc:'40ft container (used) - EXMU2000001',qty:1,price:2100}]),
+        i42=inv(42,21,cC,[{kind:'unit',unitId:uid('EXMU1000002'),desc:'20ft container (used) - EXMU1000002',qty:1,price:1300}]),
+        i43=inv(43,12,cA,[{kind:'job',jobId:jM,desc:'Modification for Customer A',qty:1,price:850}]),
+        i44=inv(44,5,cB,[{kind:'job',jobId:jO,desc:'Modular office for Customer B',qty:1,price:2100}]);
+  const pay=(iv,days,amt,m)=>st.payments.push({id:newId(),invoiceId:iv,date:d(days),amount:amt,currency:'USD',rate:70,usd:amt,method:m,notes:''});
+  pay(i40,38,1310,'Cash');pay(i41,29,1000,'Bank transfer');pay(i42,20,1300,'Cash');pay(i44,4,500,'Cash');
+  return st;
+}
+function migrate(){
+  ['customers','products','suppliers','invoices','payments','purchases','expenses','adjust','units','jobs','materials'].forEach(k=>S[k]=S[k]||[]);
+  const s=S.settings;s.lists=s.lists||{};Object.keys(DEF).forEach(k=>{if(!s.lists[k])s.lists[k]=DEF[k].slice()});
+  if(!s.calendar)s.calendar='greg';if(!s.fiscal)s.fiscal=1;if(!s.alloc)s.alloc='qty';
+  S.products.forEach(p=>{if(!p.kind)p.kind=p.track==='Yes'?'Stock':'Service'});
+  S.purchases.forEach(u=>{if(!u.cur)u.cur='USD';if(!u.rate)u.rate=s.rate;u.lines.forEach(l=>{if(l.price==null)l.price=l.cost||0;if(!l.nos)l.nos=[]})});
+  S.expenses.forEach(e=>{if(!e.linkType){if(e.invoiceId){e.linkType='invoice';e.linkId=e.invoiceId}else{e.linkType='none';e.linkId=''}}});
+  S.invoices.forEach(i=>i.lines.forEach(l=>{if(l.kind==='unit'||l.kind==='job')l.qty=1;if(!l.kind){const p=S.products.find(x=>x.id===l.prodId);l.kind=p&&p.kind==='Stock'?'stock':'custom'}}));
+  S.nid=S.nid||5000;
+}
+const COLL=['customers','products','suppliers','invoices','payments','purchases','expenses','adjust','units','jobs','materials'];
+const isDate=x=>/^\d{4}-\d{2}-\d{2}$/.test(x||'')&&!isNaN(Date.parse(x));
+function validateBackup(d,strict){
+  if(!d||typeof d!=='object'||Array.isArray(d))return 'This is not a NEW LEMAR backup file.';
+  if(!d.settings||typeof d.settings!=='object')return 'The file has no settings section.';
+  if(!Array.isArray(d.invoices))return 'The file has no invoices list.';
+  const ids={};
+  for(const k of COLL){if(d[k]==null){if(strict&&k!=='adjust')return 'The section "'+k+'" is missing.';continue}if(!Array.isArray(d[k]))return 'The section "'+k+'" is damaged.';
+    for(const r of d[k]){if(!r||typeof r!=='object'||Array.isArray(r))return 'A record in "'+k+'" is damaged.';
+      if(!Number.isFinite(r.id))return 'A record in "'+k+'" has no valid id.';
+      if(ids[r.id])return 'Two records share the same id ('+r.id+').';ids[r.id]=1}}
+  const nos={};
+  for(const i of d.invoices){if(!Array.isArray(i.lines))return 'Invoice '+i.no+' has no lines.';
+    if(!Number.isFinite(+i.no))return 'An invoice has no valid number.';
+    if(!isDate(i.date))return 'Invoice '+i.no+' has a bad date.';
+    if(nos[i.no])return 'Invoice number '+i.no+' appears twice.';nos[i.no]=1;
+    for(const l of i.lines){if(!Number.isFinite(+l.qty)||!Number.isFinite(+l.price))return 'Invoice '+i.no+' has a bad quantity or price.'}}
+  for(const p of d.payments||[]){if(!Number.isFinite(+p.usd)||!isDate(p.date))return 'A payment has a bad amount or date.'}
+  for(const e of d.expenses||[]){if(!Number.isFinite(+e.usd)||!isDate(e.date))return 'An expense has a bad amount or date.'}
+  for(const u of d.purchases||[]){if(!Array.isArray(u.lines))return 'A purchase has no lines.';if(!isDate(u.date))return 'A purchase has a bad date.'}
+  if(!strict)return null;
+  const has=(k,id)=>(d[k]||[]).some(x=>x.id===+id),seen={};
+  const unos={};for(const u of d.units||[]){const n=String(u.no||'').toUpperCase();if(!n)return 'A container has no number.';if(unos[n])return 'Container number '+n+' appears twice.';unos[n]=1;
+    if(u.purchaseId&&!has('purchases',u.purchaseId))return 'Container '+u.no+' points to a purchase that is not in the file.';if(!has('products',u.prodId))return 'Container '+u.no+' has an unknown product.'}
+  for(const i of d.invoices){if(i.customerId&&!has('customers',i.customerId))return 'Invoice '+i.no+' points to a customer that is not in the file.';
+    for(const l of i.lines){
+      if(l.kind==='unit'){if(!has('units',l.unitId))return 'Invoice '+i.no+' sells a container that is not in the file.';if(seen['u'+l.unitId])return 'A container is sold on two invoices (#'+seen['u'+l.unitId]+' and #'+i.no+').';seen['u'+l.unitId]=i.no}
+      else if(l.kind==='job'){if(!has('jobs',l.jobId))return 'Invoice '+i.no+' sells a job that is not in the file.';if(seen['j'+l.jobId])return 'A job is sold on two invoices (#'+seen['j'+l.jobId]+' and #'+i.no+').';seen['j'+l.jobId]=i.no}
+      else if(l.kind==='stock'&&!has('products',l.prodId))return 'Invoice '+i.no+' has an unknown stock item.'}}
+  for(const p of d.payments||[]){if(!has('invoices',p.invoiceId))return 'A payment (amount '+p.usd+') belongs to an invoice that is not in the file.';if(!(+p.usd>0))return 'A payment has a zero or negative amount.'}
+  const LK={unit:'units',job:'jobs',purchase:'purchases',invoice:'invoices'};
+  for(const e of d.expenses||[]){if(e.linkType&&e.linkType!=='none'){if(!LK[e.linkType])return 'An expense has an unknown link type.';if(!has(LK[e.linkType],e.linkId))return 'An expense is linked to a record that is not in the file.'}}
+  for(const m of d.materials||[]){if(!has('products',m.prodId))return 'A material use has an unknown product.';if(!has(m.targetType==='unit'?'units':'jobs',m.targetId))return 'A material use is linked to a record that is not in the file.'}
+  for(const u of d.purchases||[]){if(u.supplierId&&!has('suppliers',u.supplierId))return 'A purchase points to a supplier that is not in the file.'}
+  for(const j of d.jobs||[]){if(j.customerId&&!has('customers',j.customerId))return 'A job points to a customer that is not in the file.'}
+  return null;
+}
+/* Tries the data on a private copy. The live data S is touched only if every check passes. */
+function adopt(d,strict){
+  const old=S,oldCC=CC;
+  try{
+    if(validateBackup(d,strict))return false;
+    const c=JSON.parse(JSON.stringify(d));
+    S=c;migrate();freezeCosts();CC=calc();
+    if(!Number.isFinite(CC.rec)||!Number.isFinite(CC.stockVal))throw new Error('totals');
+    return true;
+  }catch(e){S=old;CC=oldCC;return false}
+}
+const UNDO=KEY0+'_undo';
+function keepUndo(why){try{ST.set(UNDO,JSON.stringify({why,at:new Date().toISOString(),data:S}));return true}catch(e){return false}}
+function summary(d){const n=k=>(d[k]||[]).length,ds=(d.invoices||[]).map(i=>i.date).sort();return {inv:n('invoices'),cust:n('customers'),units:n('units'),pur:n('purchases'),exp:n('expenses'),pay:n('payments'),from:ds[0]||'-',to:ds[ds.length-1]||'-'}}
+let saveT=null;
+function setSave(t,c){const e=$('#saveSt');e.className='save '+(c||'');e.lastChild.textContent=t}
+function persist(){try{ST.set(KEY,JSON.stringify(S));return true}catch(e){return e}}
+function failBanner(show,msg){let b=document.getElementById('saveFail');
+  if(!b){b=document.createElement('div');b.id='saveFail';b.setAttribute('role','alert');b.style.cssText='position:fixed;left:0;right:0;top:0;z-index:99;background:var(--loss);color:#fff;padding:10px 16px;font-size:14px;font-weight:600;display:none;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap';document.body.appendChild(b)}
+  if(show){b.innerHTML='<span></span><button type="button" class="btn sm" data-act="backup">Download backup now</button>';b.firstChild.textContent=msg;b.style.display='flex'}else b.style.display='none'}
+function saveNow(){clearTimeout(saveT);saveT=null;const r=persist();
+  if(r===true){setSave('Saved in this browser','ok');failBanner(false);try{const u=storageInfo();if(u.pct>=70)setSave('Saved. Storage '+u.pct+'% full: download a backup','ok')}catch(e){}return true}
+  const quota=r&&(r.name==='QuotaExceededError'||/quota/i.test(r.message||''));
+  setSave('NOT SAVED','');failBanner(true,ST.desktop?'NOT SAVED: the data file could not be written (disk full or folder protected). Download a backup now so nothing is lost.':quota?'NOT SAVED: the browser storage is full. Download a backup now and free space.':'NOT SAVED: this browser blocks storage (private mode or storage turned off). Download a backup now so nothing is lost.');return false}
+function save(){DEMO_UNSAVED=false;clearTimeout(saveT);setSave('Saving...','');saveT=setTimeout(saveNow,300)}
+window.addEventListener('pagehide',()=>{if(saveT)saveNow()});document.addEventListener('visibilitychange',()=>{if(document.hidden&&saveT)saveNow()});
+function storageInfo(){let bytes=0;try{ST.keys().forEach(k=>{if(k&&k.indexOf('newlemar')===0)bytes+=(k.length+(ST.get(k)||'').length)*2})}catch(e){}
+  const LIM=5*1024*1024;return {kb:Math.round(bytes/1024),pct:ST.desktop?0:Math.min(100,Math.round(bytes/LIM*100))}}
+function lastBackup(){try{return ST.get(KEY0+'_lastbackup')||''}catch(e){return ''}}
+function applyTheme(){const t=S.settings.theme,r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme')}
+
+/* ================= cost engine ================= */
+function calc(){
+  const cm={},pm={},sm={},um={},jm={},im={},pum={};
+  S.customers.forEach(c=>cm[c.id]=c);S.products.forEach(p=>pm[p.id]=p);S.suppliers.forEach(s=>sm[s.id]=s);S.units.forEach(u=>um[u.id]=u);S.jobs.forEach(j=>jm[j.id]=j);
+  const ex={unit:{},job:{},purchase:{},invoice:{}};
+  S.expenses.forEach(e=>{if(ex[e.linkType]){(ex[e.linkType][e.linkId]=ex[e.linkType][e.linkId]||[]).push(e)}});
+  const mu={unit:{},job:{}};S.materials.forEach(m=>{if(mu[m.targetType])(mu[m.targetType][m.targetId]=mu[m.targetType][m.targetId]||[]).push(m)});
+  /* purchases */
+  const pur=S.purchases.map(u=>{const conv=v=>u.cur==='AFN'?v/(u.rate||1):v;
+    const lines=u.lines.map(l=>({l,usd:conv(l.price),qty:l.qty}));const total=sum(lines,x=>x.usd*x.qty),qtyAll=sum(lines,x=>x.qty);
+    const exps=ex.purchase[u.id]||[],expTot=sum(exps,e=>e.usd),mode=(u.alloc||S.settings.alloc||'qty'),useVal=mode==='value'&&total>0.005,share=qtyAll?expTot/qtyAll:0;lines.forEach(x=>{x.share=useVal?expTot*x.usd/total:share});
+    const o={u,id:u.id,date:u.date,sup:sm[u.supplierId],lines,total,paid:u.paid||0,due:total-(u.paid||0),qtyAll,expTot,share,mode:useVal?'value':'qty'};pum[u.id]=o;return o}).sort((a,b)=>a.date<b.date?1:-1);
+  /* stock items average cost + qty */
+  const stk={};S.products.forEach(p=>{if(p.kind==='Stock')stk[p.id]={p,adj:0,adjCost:0,bought:0,boughtCost:0,sold:0,used:0}});
+  S.adjust.forEach(a=>{const s=stk[a.prodId];if(s){s.adj+=a.qty;if(a.qty>0)s.adjCost+=a.qty*(s.p.cost||0)}});
+  pur.forEach(x=>x.lines.forEach(ln=>{const s=stk[ln.l.prodId];if(s){s.bought+=ln.qty;s.boughtCost+=ln.qty*(ln.usd+ln.share)}}));
+  S.invoices.forEach(i=>i.lines.forEach(l=>{if(l.kind==='stock'&&stk[l.prodId])stk[l.prodId].sold+=l.qty}));
+  S.materials.forEach(m=>{if(stk[m.prodId])stk[m.prodId].used+=m.qty});
+  const stock=Object.keys(stk).map(k=>{const s=stk[k];const addQ=s.bought+Math.max(0,s.adj),addC=s.boughtCost+s.adjCost;s.avg=addQ>0?addC/addQ:(s.p.cost||0);s.on=s.adj+s.bought-s.sold-s.used;s.val=s.on*s.avg;s.st=s.on<=0?'OUT':s.on<=(s.p.reorder||0)?'LOW':'OK';return s});
+  const avg={};stock.forEach(s=>avg[s.p.id]=s.avg);
+  /* units */
+  const soldBy={},jobInv={};
+  S.invoices.forEach(i=>i.lines.forEach(l=>{if(l.kind==='unit')soldBy[l.unitId]=i.id;if(l.kind==='job')jobInv[l.jobId]=i.id}));
+  const units=S.units.map(u=>{let base=u.cost||0,share=0,pu=null;
+    if(u.purchaseId&&pum[u.purchaseId]){pu=pum[u.purchaseId];const ln=pu.lines.find(x=>x.l.nos&&x.l.nos.indexOf(u.no)>=0);if(ln){base=ln.usd;share=ln.share}else share=pu.share}
+    const ee=ex.unit[u.id]||[],mm=mu.unit[u.id]||[];const expD=sum(ee,e=>e.usd),matD=sum(mm,m=>m.cost);
+    const o={u,id:u.id,no:u.no,prod:pm[u.prodId],pu,base,share,expD,matD,ee,mm,total:base+share+expD+matD,soldInv:soldBy[u.id]||null};return o}).sort((a,b)=>a.no<b.no?-1:1);
+  const unm={};units.forEach(x=>unm[x.id]=x);
+  /* jobs */
+  const jobs=S.jobs.map(j=>{const ee=ex.job[j.id]||[],mm=mu.job[j.id]||[];const expD=sum(ee,e=>e.usd),matD=sum(mm,m=>m.cost);return {j,id:j.id,cust:cm[j.customerId],ee,mm,expD,matD,cost:expD+matD,soldInv:jobInv[j.id]||null}}).sort((a,b)=>a.j.start<b.j.start?1:-1);
+  const jbm={};jobs.forEach(x=>jbm[x.id]=x);
+  /* invoices */
+  const payBy={};S.payments.forEach(p=>(payBy[p.invoiceId]=payBy[p.invoiceId]||[]).push(p));
+  const lineCost=l=>l.kind==='unit'?(unm[l.unitId]?unm[l.unitId].total:0):l.kind==='job'?(jbm[l.jobId]?jbm[l.jobId].cost:0):l.kind==='stock'?l.qty*(typeof l.cost==='number'?l.cost:(avg[l.prodId]||0)):l.qty*(l.cost||0);
+  const inv=S.invoices.map(i=>{let total=0,cost=0;i.lines.forEach(l=>{total+=l.qty*l.price;cost+=lineCost(l)});const pays=payBy[i.id]||[],paid=sum(pays,p=>p.usd),bal=total-paid,lx=sum(ex.invoice[i.id]||[],e=>e.usd);
+    const o={i,id:i.id,no:i.no,date:i.date,cust:cm[i.customerId],total,cost,paid,bal,pays,lx,gross:total-cost,net:total-cost-lx,status:bal<=0.005?'Paid':paid>0.005?'Partial':'Unpaid'};im[i.id]=o;return o}).sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:b.no-a.no);
+  units.forEach(x=>{x.soldInvO=x.soldInv?im[x.soldInv]:null;x.status=x.soldInv?'Sold':'In stock';
+    if(x.soldInvO){const ln=x.soldInvO.i.lines.find(l=>l.kind==='unit'&&l.unitId===x.id);x.price=ln?ln.price:0;x.net=x.price-x.total}});
+  jobs.forEach(x=>{x.soldInvO=x.soldInv?im[x.soldInv]:null;if(x.soldInvO){const ln=x.soldInvO.i.lines.find(l=>l.kind==='job'&&l.jobId===x.id);x.price=ln?ln.price:0;x.net=x.price-x.cost}});
+  const stockVal=sum(units.filter(x=>!x.soldInv),x=>x.total)+sum(stock,s=>Math.max(0,s.val))+sum(jobs.filter(x=>!x.soldInv),x=>x.cost);
+  return {cm,pm,sm,um:unm,jm:jbm,im,pur,units,jobs,inv,stock,avg,stockVal,rec:sum(inv,x=>x.bal),pay:sum(pur,x=>x.due),lineCost,ex,pum};
+}
+/* Cost of a stock item on a date, using only purchases and adjustments dated on or before it. Saved on the invoice line when it is sold. */
+function stockCostAsOf(C,prodId,date){const p=C.pm[prodId];let q=0,c=0;
+  C.pur.forEach(x=>{if(x.date<=date)x.lines.forEach(ln=>{if(ln.l.prodId===prodId){q+=ln.qty;c+=ln.qty*(ln.usd+ln.share)}})});
+  S.adjust.forEach(a=>{if(a.prodId===prodId&&a.date<=date&&a.qty>0){q+=a.qty;c+=a.qty*((p&&p.cost)||0)}});
+  return Math.round((q>0?c/q:((p&&p.cost)||0))*10000)/10000}
+function freezeCosts(){const C=calc();let n=0;S.invoices.forEach(i=>i.lines.forEach(l=>{if(l.kind==='stock'&&typeof l.cost!=='number'){l.cost=stockCostAsOf(C,l.prodId,i.date);n++}}));return n}
+function syncUnits(pu){
+  const keep={};
+  pu.lines.forEach((l,idx)=>{(l.nos||[]).forEach(no=>{let u=S.units.find(x=>x.purchaseId===pu.id&&x.no===no);
+    if(!u){u={id:newId(),no,prodId:l.prodId,purchaseId:pu.id,date:pu.date,cost:0,notes:''};S.units.push(u)}u.prodId=l.prodId;u.date=pu.date;keep[u.id]=1})});
+  const sold={};S.invoices.forEach(i=>i.lines.forEach(l=>{if(l.kind==='unit')sold[l.unitId]=1}));
+  let blocked=0;S.units=S.units.filter(u=>{if(u.purchaseId===pu.id&&!keep[u.id]){if(sold[u.id]){blocked++;return true}return false}return true});
+  return blocked;
+}
+function statsFor(C,r){
+  const inv=C.inv.filter(x=>x.date>=r.from&&x.date<=r.to);
+  const sales=sum(inv,x=>x.total),cost=sum(inv,x=>x.cost+x.lx),gross=sales-cost;
+  const opex=sum(S.expenses.filter(e=>e.linkType==='none'&&e.date>=r.from&&e.date<=r.to),e=>e.usd);
+  const spent=sum(S.expenses.filter(e=>e.date>=r.from&&e.date<=r.to),e=>e.usd);
+  const coll=sum(S.payments.filter(p=>p.date>=r.from&&p.date<=r.to),p=>p.usd);
+  return {sales,cost,gross,opex,net:gross-opex,spent,coll,n:inv.length};
+}
+function recAt(C,to){return sum(C.inv.filter(x=>x.date<=to),x=>x.total)-sum(S.payments.filter(p=>p.date<=to&&C.im[p.invoiceId]&&C.im[p.invoiceId].date<=to),p=>p.usd)}
+
+/* ================= components ================= */
+const num=(v,f)=>'<span class="num '+(f||'')+'">'+v+'</span>';
+const pill=s=>'<span class="status '+String(s).replace(/ /g,'')+'">'+esc(s)+'</span>';
+function table(cols,rows,foot){
+  if(!rows.length)return '<div class="empty">Nothing here yet.</div>';
+  return '<div class="scroll"><table><thead><tr>'+cols.map(c=>'<th'+(c.r?' class="r"':'')+'>'+c.h+'</th>').join('')+'</tr></thead><tbody>'+
+   rows.map((r,i)=>'<tr style="--i:'+Math.min(i,20)+'" '+(r.attr||'')+'>'+r.cells.map((c,j)=>'<td'+(cols[j]&&cols[j].r?' class="r"':'')+'>'+c+'</td>').join('')+'</tr>').join('')+'</tbody>'+(foot?'<tfoot><tr>'+foot.map((c,j)=>'<td'+(cols[j]&&cols[j].r?' class="r"':'')+'>'+c+'</td>').join('')+'</tr></tfoot>':'')+'</table></div>'}
+function kpi(l,val,cur,prev,o){o=o||{};let d='';
+  if(prev!=null&&P.compare){const diff=cur-prev,pc=prev?diff/Math.abs(prev)*100:null;const good=o.lowerBetter?diff<0:diff>0;d='<span class="delta '+(Math.abs(diff)<0.005?'mut':good?'pos':'neg')+'">'+(diff>0.004?'&#9650; ':diff<-0.004?'&#9660; ':'')+(pc==null?usd(diff,true):Math.abs(pc).toFixed(0)+'%')+'</span> <span class="mut">vs previous</span>'}
+  return '<div class="card kpi stag"><small>'+l+'</small><div class="v '+(o.c||'')+'">'+num(usd(val))+'</div><div class="s">'+(d||o.sub||'')+'</div></div>'}
+function barRows(items,fmt,color){const mx=Math.max(1,...items.map(x=>Math.abs(x.v)));
+  return items.length?items.map((x,i)=>'<div class="brow"><span class="lab" title="'+esc(x.k)+'">'+esc(x.k)+'</span><div class="bz"><div class="b" data-w="'+(Math.abs(x.v)/mx*100)+'" style="--i:'+i+';background:'+(x.v<0?'var(--loss)':color||'var(--blue)')+'"></div></div><span class="r">'+num(fmt(x.v))+'</span></div>').join(''):'<div class="empty">No data</div>'}
+function monthChart(C,r){
+  let ms=monthsIn(cal(),r.from,r.to);if(ms.length<6){const last=ms[ms.length-1]||toCal(cal(),r.to);const e=ms.length?ms[ms.length-1]:{y:last[0],m:last[1],from:r.to,to:r.to};ms=[];for(let i=5;i>=0;i--){const y=e.y,m=e.m-i;ms.push({y:y+Math.floor((m-1)/12),m:((m-1)%12+12)%12+1,from:mStart(cal(),y,m),to:mEnd(cal(),y,m)})}}
+  if(ms.length>12)ms=ms.slice(-12);
+  const st=ms.map(x=>statsFor(C,x)),W=720,H=240,pl=50,pr=10,pt=14,pb=28,n=ms.length;
+  const mx=Math.max(1,...st.map(s=>Math.max(s.sales,s.coll,s.opex)))*1.1,hh=H-pt-pb,step=(W-pl-pr)/n,bw=Math.min(18,step/4);
+  let g='';for(let k=0;k<=4;k++){const v=mx*k/4,y=pt+hh-(v/mx)*hh;g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" stroke="var(--grid)"/><text x="'+(pl-6)+'" y="'+(y+3)+'" text-anchor="end">'+Math.round(v).toLocaleString('en-US')+'</text>'}
+  const cols=['var(--blue)','var(--win)','var(--loss)'];
+  ms.forEach((m,i)=>{const cx=pl+step*(i+.5),vals=[st[i].sales,st[i].coll,st[i].opex];vals.forEach((v,j)=>{const h=Math.max(1,v/mx*hh),x=cx+(j-1)*(bw+3)-bw/2;
+    g+='<rect class="mb" x="'+x+'" y="'+(pt+hh-h)+'" width="'+bw+'" height="'+h+'" rx="3" fill="'+cols[j]+'" style="transform-box:fill-box;transform-origin:bottom;transform:scaleY(0);transition:transform .9s cubic-bezier(.2,.9,.3,1) '+(i*60+j*40)+'ms"><title>'+monthName(cal(),m.y,m.m)+': '+usd(v)+'</title></rect>'});
+    g+='<text x="'+cx+'" y="'+(H-8)+'" text-anchor="middle">'+(cal()==='jalali'?JM[m.m-1].slice(0,4):GM[m.m-1])+' '+String(m.y).slice(2)+'</text>'});
+  return '<div class="chart"><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Monthly sales, collected and general expenses">'+g+'</svg></div><div class="legend"><span><i style="background:var(--blue)"></i>Sales</span><span><i style="background:var(--win)"></i>Collected</span><span><i style="background:var(--loss)"></i>General expenses</span></div>'}
+
+/* ================= forms ================= */
+const opt=arr=>arr.map(x=>({v:x,l:x}));
+const custOpts=()=>S.customers.map(c=>({v:c.id,l:c.name}));
+const invOpts=()=>S.invoices.slice().sort((a,b)=>b.no-a.no).map(i=>({v:i.id,l:'#'+i.no+' · '+((S.customers.find(c=>c.id===i.customerId)||{}).name||'Walk-in')}));
+const unitProdOpts=()=>S.products.filter(p=>p.kind==='Unit').map(p=>({v:p.id,l:p.name}));
+const stockProdOpts=()=>S.products.filter(p=>p.kind==='Stock').map(p=>({v:p.id,l:p.name}));
+const targetOpts=(type)=>{const C=CC||calc();
+  if(type==='unit')return C.units.map(x=>({v:x.id,l:x.no+' · '+(x.prod?x.prod.name:'')+(x.soldInv?' (sold)':'')}));
+  if(type==='job')return C.jobs.map(x=>({v:x.id,l:x.j.name+' ['+x.j.status+']'}));
+  if(type==='purchase')return C.pur.map(x=>({v:x.id,l:x.date+' · '+(x.sup?x.sup.name:'-')+' · '+usd(x.total)}));
+  if(type==='invoice')return invOpts();return []};
+const ENT={
+  customers:{t:'Customer',f:()=>[{k:'name',l:'Name',req:1},{k:'type',l:'Type',t:'select',opts:()=>opt(L('types'))},{k:'phone',l:'Phone'},{k:'province',l:'Province / city'},{k:'address',l:'Address',t:'textarea',wide:1},{k:'notes',l:'Notes',t:'textarea',wide:1}]},
+  products:{t:'Product / service',f:()=>[{k:'name',l:'Name',req:1},{k:'category',l:'Category',t:'select',opts:()=>opt(L('pcats'))},{k:'kind',l:'How it is tracked',t:'select',opts:()=>KINDS.map(k=>({v:k[0],l:k[1]}))},{k:'unit',l:'Unit',t:'select',opts:()=>opt(L('units'))},{k:'price',l:'Usual selling price (USD)',t:'number'},{k:'cost',l:'Opening cost per item (USD, stock items)',t:'number'},{k:'reorder',l:'Low stock alert at (stock items)',t:'number'},{k:'spec',l:'Specification (size, color, details)',wide:1},{k:'notes',l:'Notes',t:'textarea',wide:1}]},
+  suppliers:{t:'Supplier',f:()=>[{k:'name',l:'Name',req:1},{k:'phone',l:'Phone'},{k:'address',l:'Address',wide:1},{k:'notes',l:'Notes',t:'textarea',wide:1}]},
+  expenses:{t:'Expense',f:()=>[{k:'date',l:'Date',t:'date',req:1},{k:'category',l:'Category',t:'select',opts:()=>opt(L('ecats'))},{k:'payee',l:'Paid to'},{k:'amount',l:'Amount',t:'number',req:1},{k:'currency',l:'Currency',t:'select',opts:()=>opt(['USD','AFN'])},{k:'rate',l:'AFN per 1 USD (if AFN)',t:'number'},{k:'method',l:'Method',t:'select',opts:()=>opt(L('methods'))},
+    {k:'linkType',l:'This cost belongs to',t:'select',opts:()=>[{v:'none',l:'General company expense (rent, salaries...)'},{v:'unit',l:'A container / unit'},{v:'job',l:'A job (office, toilet, modification...)'},{v:'purchase',l:'A purchase (shared equally between its items)'},{v:'invoice',l:'A sale / invoice (e.g. delivery)'}]},{k:'linkId',l:'Which one',t:'select',blank:'-',opts:()=>[]},{k:'desc',l:'Description',wide:1},{k:'notes',l:'Notes',t:'textarea',wide:1}]},
+  adjust:{t:'Stock adjustment',f:()=>[{k:'date',l:'Date',t:'date',req:1},{k:'prodId',l:'Product',t:'select',opts:stockProdOpts,req:1},{k:'qty',l:'Quantity (+ add, - remove)',t:'number',req:1},{k:'reason',l:'Reason',wide:1}]},
+  payments:{t:'Payment',f:()=>[{k:'invoiceId',l:'Invoice',t:'select',opts:invOpts,req:1},{k:'date',l:'Date',t:'date',req:1},{k:'amount',l:'Amount received',t:'number',req:1},{k:'currency',l:'Currency',t:'select',opts:()=>opt(['USD','AFN'])},{k:'rate',l:'AFN per 1 USD (if AFN)',t:'number'},{k:'method',l:'Method',t:'select',opts:()=>opt(L('methods'))},{k:'notes',l:'Reference / notes',wide:1}]},
+  units:{t:'Container / unit',f:()=>[{k:'no',l:'Number (e.g. container number)',req:1},{k:'prodId',l:'Type',t:'select',opts:unitProdOpts,req:1},{k:'date',l:'Date acquired',t:'date'},{k:'cost',l:'Purchase cost (USD) - only for units not bought through a purchase',t:'number',wide:1},{k:'notes',l:'Notes',t:'textarea',wide:1}]},
+  jobs:{t:'Job',f:()=>[{k:'name',l:'Job name',req:1},{k:'type',l:'Type',t:'select',opts:()=>opt(L('jtypes'))},{k:'customerId',l:'Customer',t:'select',blank:'None',opts:custOpts},{k:'status',l:'Status',t:'select',opts:()=>opt(JSTAT)},{k:'start',l:'Start date',t:'date'},{k:'due',l:'Due date',t:'date'},{k:'notes',l:'Notes',t:'textarea',wide:1}]},
+  materials:{t:'Material use',f:()=>[{k:'date',l:'Date',t:'date',req:1},{k:'prodId',l:'Material',t:'select',opts:stockProdOpts,req:1},{k:'qty',l:'Quantity used',t:'number',req:1},{k:'targetType',l:'Used for',t:'select',opts:()=>[{v:'unit',l:'A container / unit'},{v:'job',l:'A job'}]},{k:'targetId',l:'Which one',t:'select',opts:()=>[],req:1},{k:'notes',l:'Notes',t:'textarea',wide:1}]}
+};
+const DEFV={customers:()=>({type:L('types')[0]}),products:()=>({category:L('pcats')[0],unit:L('units')[0],kind:'Service',price:0,cost:0,reorder:0}),suppliers:()=>({}),expenses:()=>({date:today(),category:L('ecats')[0],currency:'USD',rate:S.settings.rate,method:L('methods')[0],linkType:'none',linkId:''}),
+  adjust:()=>({date:today(),qty:1}),payments:()=>({date:today(),currency:'USD',rate:S.settings.rate,method:L('methods')[0]}),units:()=>({date:today(),cost:0}),jobs:()=>({type:L('jtypes')[0],status:'Planned',start:today()}),materials:()=>({date:today(),targetType:'unit',qty:1})};
+function fld(f,v){const id='f_'+f.k,req=f.req?' required':'',val=v==null?'':v;let h='<label'+(f.wide?' style="grid-column:1/-1"':'')+'>'+f.l;
+  if(f.t==='select'){const o=typeof f.opts==='function'?f.opts():f.opts;h+='<select id="'+id+'"'+req+'>'+(f.blank?'<option value="">'+f.blank+'</option>':'')+o.map(x=>'<option value="'+esc(x.v)+'"'+(String(x.v)===String(val)?' selected':'')+'>'+esc(x.l)+'</option>').join('')+'</select>'}
+  else if(f.t==='textarea')h+='<textarea id="'+id+'">'+esc(val)+'</textarea>';
+  else h+='<input id="'+id+'" type="'+(f.t||'text')+'"'+(f.t==='number'?' inputmode="decimal" step="any"':'')+' value="'+esc(val)+'"'+req+'>';
+  if(f.t==='date')h+='<span class="jal" data-for="'+id+'"></span>';return h+'</label>'}
+const fieldsHTML=(fs,vals)=>'<div class="f">'+fs.map(f=>fld(f,vals[f.k])).join('')+'</div>';
+function readFields(fs){const o={};fs.forEach(f=>{const el=$('#f_'+f.k);if(!el)return;let v=el.value;if(f.t==='number')v=v===''?null:parseFloat(v);o[f.k]=v});return o}
+function refreshJal(){$$('.jal[data-for]').forEach(e=>{const el=$('#'+e.dataset.for);e.textContent=el?jal(el.value):''})}
+function fillTargets(typeId,targetId,sel){const t=$('#'+typeId),g=$('#'+targetId);if(!t||!g)return;const set=()=>{const o=targetOpts(t.value);g.innerHTML=(t.value==='none'?'<option value="">-</option>':'')+o.map(x=>'<option value="'+esc(x.v)+'">'+esc(x.l)+'</option>').join('');g.disabled=t.value==='none'};set();if(sel!=null&&sel!=='')g.value=sel;t.addEventListener('change',set)}
+
+/* ================= modal ================= */
+function openModal(title,body,handler,o){o=o||{};mHandler=handler;document.body.classList.add('modal-open');
+  $('#modal').innerHTML='<div class="ov" id="ov"><div class="card"><h3><span>'+title+'</span><button class="btn sm noprint" data-x type="button" aria-label="Close">&#10005;</button></h3><form id="mform">'+body+(o.nosubmit?'':'<div class="act noprint"><button class="btn pri" type="submit">'+(o.submit||'Save')+'</button>'+(o.extra||'')+'</div>')+'</form></div></div>';refreshJal()}
+function closeModal(){$('#modal').innerHTML='';mHandler=null;document.body.classList.remove('modal-open')}
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),3200)}
+function confirmBtn(btn,label,fn){if(btn.dataset.arm==='1'){fn();return}btn.dataset.arm='1';const old=btn.textContent;btn.textContent=label;setTimeout(()=>{btn.dataset.arm='';btn.textContent=old},3000)}
+
+function openEntity(name,id,pre){
+  CC=calc();const E=ENT[name],fs=E.f(),rec=id?S[name].find(x=>x.id===id):null,vals=rec?Object.assign({},rec):Object.assign(DEFV[name](),pre||{});
+  if(name==='payments'&&!id&&vals.invoiceId==null&&S.invoices.length){const o=CC.inv.filter(x=>x.bal>.005)[0]||CC.inv[0];vals.invoiceId=o.id}
+  let extra='';if(id&&name!=='materials')extra='<button class="btn danger" type="button" data-del="'+name+':'+id+'">Delete</button>';
+  if(id&&name==='materials')extra='<button class="btn danger" type="button" data-del="materials:'+id+'">Delete</button>';
+  openModal((id?'Edit ':'New ')+E.t.toLowerCase(),fieldsHTML(fs,vals)+(name==='materials'?'<p class="mut" id="mprev" style="font-size:12px;margin:12px 0 0"></p>':'')+(name==='expenses'?'<p class="mut" style="font-size:12px;margin:12px 0 0">Costs linked to a container or job are added to that item\'s cost and reach the invoice when it is sold. General expenses are deducted from profit in the period they happened.</p>':''),()=>{
+    const v=readFields(fs);
+    for(const f of fs){if(f.t==='date'&&f.req&&!isDate(v[f.k])){toast('Enter a valid date');return false}if(f.req&&f.t!=='date'&&f.t!=='select'&&(v[f.k]==null||String(v[f.k]).trim()==='')){toast('Please fill in: '+f.l);return false}if(f.t==='select'&&f.req&&(v[f.k]==null||v[f.k]==='')){toast('Please choose: '+f.l);return false}}
+    if(name==='expenses'||name==='payments'){if(!(v.amount>0)){toast('Enter an amount');return false}if(v.currency==='AFN'&&!(v.rate>0)){toast('Enter the AFN rate');return false}v.usd=r2(v.currency==='USD'?v.amount:v.amount/v.rate)}
+    if(name==='expenses'){if(v.linkType!=='none'&&!v.linkId){toast('Choose which '+v.linkType+' this cost belongs to');return false}v.linkId=v.linkType==='none'?'':+v.linkId;if(v.linkType!=='none'&&!targetOpts(v.linkType).some(o=>+o.v===v.linkId)){toast('The linked record no longer exists');return false}}
+    if(name==='payments'){v.invoiceId=+v.invoiceId;const iv=CC.im[v.invoiceId];if(!iv){toast('Choose a valid invoice. A payment must belong to an existing invoice.');return false}
+      const other=iv.paid-(rec&&rec.invoiceId===v.invoiceId?rec.usd:0);if(v.usd+other>iv.total+0.01){toast('This payment is more than the balance of invoice #'+iv.no+' ('+usd(iv.total-other)+' left)');return false}
+      if(v.date<iv.date){toast('The payment date is before the invoice date ('+iv.date+')');return false}}
+    if(name==='adjust'){v.prodId=+v.prodId;const st=CC.stock.find(x=>x.p.id===v.prodId);if(!st){toast('Choose a stock item');return false}if(!v.qty){toast('Quantity cannot be zero');return false}if(st.on+v.qty-(rec&&rec.prodId===v.prodId?rec.qty:0)<0){toast('Stock cannot go below zero (on hand '+st.on+')');return false}}
+    if(name==='jobs')v.customerId=v.customerId?+v.customerId:'';
+    if(name==='units'){v.no=(v.no||'').trim().toUpperCase();if(!v.no){toast('Enter the number');return false}if(S.units.some(u=>u.no===v.no&&(!rec||u.id!==rec.id))){toast('This number already exists');return false}v.prodId=+v.prodId;if(!CC.pm[v.prodId]||CC.pm[v.prodId].kind!=='Unit'){toast('Choose a product tracked as Container / unit');return false}if(v.cost==null)v.cost=0;if(v.cost<0){toast('Cost cannot be negative');return false}}
+    if(name==='materials'){if(!(v.qty>0)){toast('Enter the quantity');return false}v.prodId=+v.prodId;v.targetId=+v.targetId;const s=CC.stock.find(x=>x.p.id===v.prodId);if(!s){toast('Choose a material');return false}if(!targetOpts(v.targetType).some(o=>+o.v===v.targetId)){toast('Choose the container or job this material was used for');return false}v.cost=r2(v.qty*(s.avg));
+      if(s.on-v.qty+(rec&&rec.prodId===v.prodId?rec.qty:0)<0){toast('Not enough '+s.p.name+' in stock (on hand '+s.on+'). Record the purchase first.');return false}}
+    if(name==='products'){v.price=v.price||0;v.cost=v.cost||0;v.reorder=v.reorder||0;if(v.price<0||v.cost<0||v.reorder<0){toast('Price, cost and alert level cannot be negative');return false}if(S.products.some(x=>x.name.trim().toLowerCase()===String(v.name).trim().toLowerCase()&&(!rec||x.id!==rec.id))){toast('A product with this name already exists');return false}}
+    if(name==='payments'){const iv=CC.im[v.invoiceId];if(iv){const other=iv.paid-(rec?rec.usd:0);if(v.usd+other>iv.total+0.01)toast('Note: payments exceed the invoice total')}}
+    if(rec)Object.assign(rec,v);else{v.id=newId();S[name].push(v)}
+    save();render();toast(E.t+' saved')},{extra});
+  if(name==='expenses'){fillTargets('f_linkType','f_linkId',vals.linkId);const cur=$('#f_currency'),upd=()=>{$('#f_rate').disabled=cur.value==='USD'};cur.addEventListener('change',upd);upd()}
+  if(name==='materials'){fillTargets('f_targetType','f_targetId',vals.targetId);const upd=()=>{const s=CC.stock.find(x=>x.p.id===+$('#f_prodId').value),qv=parseFloat($('#f_qty').value)||0;$('#mprev').innerHTML=s?'Average cost '+usd(s.avg)+' each &middot; this use costs <b class="num">'+usd(qv*s.avg)+'</b> &middot; on hand '+s.on:''};['f_prodId','f_qty'].forEach(i=>$('#'+i).addEventListener('input',upd));upd()}
+  if(name==='payments'){const sel=$('#f_invoiceId');if(rec&&rec.invoiceId)sel.value=rec.invoiceId}
+}
+
+/* ---------- line editor ---------- */
+const KS=[['unit','Container / unit'],['job','Job'],['stock','Stock item'],['custom','Service / other']];
+function itemOptions(kind,sel,invId){const C=CC;let o='';
+  if(kind==='unit'){const us=C.units.filter(x=>!x.soldInv||x.soldInv===invId);o='<option value="">Choose container...</option>'+us.map(x=>'<option value="'+x.id+'"'+(String(sel)===String(x.id)?' selected':'')+'>'+esc(x.no+' · '+(x.prod?x.prod.name:'')+' · cost '+usd(x.total))+'</option>').join('')}
+  else if(kind==='job'){const js=C.jobs.filter(x=>!x.soldInv||x.soldInv===invId);o='<option value="">Choose job...</option>'+js.map(x=>'<option value="'+x.id+'"'+(String(sel)===String(x.id)?' selected':'')+'>'+esc(x.j.name+' · cost '+usd(x.cost))+'</option>').join('')}
+  else if(kind==='stock'){o='<option value="">Choose item...</option>'+S.products.filter(p=>p.kind==='Stock').map(p=>'<option value="'+p.id+'"'+(String(sel)===String(p.id)?' selected':'')+'>'+esc(p.name)+'</option>').join('')}
+  else{o='<option value="">Custom item</option>'+S.products.filter(p=>p.kind==='Service').map(p=>'<option value="'+p.id+'"'+(String(sel)===String(p.id)?' selected':'')+'>'+esc(p.name)+'</option>').join('')}
+  return o}
+function lineRow(kind,l,invId){
+  if(kind==='inv'){const k=l.kind||'unit',selId=k==='unit'?l.unitId:k==='job'?l.jobId:l.prodId,auto=k!=='custom';
+    return '<tr class="ln"><td><select data-c="k">'+KS.map(x=>'<option value="'+x[0]+'"'+(x[0]===k?' selected':'')+'>'+x[1]+'</option>').join('')+'</select></td><td><select data-c="i">'+itemOptions(k,selId,invId)+'</select></td><td><input data-c="d" value="'+esc(l.desc||'')+'" placeholder="Description" style="min-width:170px"></td><td><input class="q" data-c="q" type="number" inputmode="decimal" step="any" value="'+(l.qty==null?1:l.qty)+'"'+(k==='unit'||k==='job'?' readonly':'')+'></td><td><input class="m" data-c="pr" type="number" inputmode="decimal" step="any" value="'+(l.price==null?'':l.price)+'"></td><td><input class="m" data-c="c" type="number" inputmode="decimal" step="any" value="'+(k==='custom'&&l.cost!=null?l.cost:'')+'"'+(auto?' readonly placeholder="auto"':'')+'></td><td class="r"><span class="num lt">0</span></td><td><button type="button" class="btn sm danger" data-rm>&#10005;</button></td></tr>'}
+  const po='<option value="">Custom item</option>'+S.products.map(p=>'<option value="'+p.id+'"'+(String(l.prodId)===String(p.id)?' selected':'')+'>'+esc(p.name)+'</option>').join('');
+  return '<tr class="ln"><td><select data-c="p">'+po+'</select></td><td><input data-c="d" value="'+esc(l.desc||'')+'" placeholder="Description" style="min-width:160px"></td><td><input class="q" data-c="q" type="number" inputmode="decimal" step="any" value="'+(l.qty==null?1:l.qty)+'"></td><td><input class="m" data-c="c" type="number" inputmode="decimal" step="any" value="'+(l.price==null?'':l.price)+'"></td><td><textarea data-c="n" placeholder="Unit numbers, one per line (containers only)">'+esc((l.nos||[]).join('\n'))+'</textarea></td><td class="r"><span class="num lt">0</span></td><td><button type="button" class="btn sm danger" data-rm>&#10005;</button></td></tr>'}
+function linesHTML(kind,lines,invId){return '<div class="scroll"><table class="lines"><thead><tr>'+(kind==='inv'?'<th>Type</th><th>Item</th><th>Description</th><th>Qty</th><th>Unit price</th><th>Unit cost</th>':'<th>Item</th><th>Description</th><th>Qty</th><th>Unit cost</th><th>Unit numbers</th>')+'<th class="r">Amount</th><th></th></tr></thead><tbody id="lbody">'+lines.map(l=>lineRow(kind,l,invId)).join('')+'</tbody></table></div><button type="button" class="btn sm" data-addline style="margin-top:8px">+ Add line</button><div class="tot" id="ltot"></div>'}
+const nv=(r,c)=>{const e=r.querySelector('[data-c="'+c+'"]');const v=e?parseFloat(e.value):NaN;return isFinite(v)?v:0};
+function readLines(kind){return $$('#lbody .ln').map(r=>{const g=c=>r.querySelector('[data-c="'+c+'"]');
+  if(kind==='inv'){const k=g('k').value,iv=g('i').value;const o={kind:k,desc:g('d').value.trim(),qty:(k==='unit'||k==='job')?1:nv(r,'q'),price:nv(r,'pr')};
+    if(k==='unit')o.unitId=iv?+iv:'';else if(k==='job')o.jobId=iv?+iv:'';else o.prodId=iv?+iv:'';if(k==='custom')o.cost=nv(r,'c');return o}
+  const nos=g('n').value.split('\n').map(x=>x.trim().toUpperCase()).filter(Boolean);return {prodId:g('p').value?+g('p').value:'',desc:g('d').value.trim(),qty:nv(r,'q'),price:nv(r,'c'),nos}})}
+function recalcLines(kind){let t=0,c=0;const rate=parseFloat(($('#f_rate')||{}).value)||S.settings.rate;
+  $$('#lbody .ln').forEach(r=>{
+    if(kind==='inv'){const k=r.querySelector('[data-c="k"]').value,iv=r.querySelector('[data-c="i"]').value,q=nv(r,'q'),pr=nv(r,'pr');let cost=0;
+      if(k==='unit'){const u=CC.um[iv];cost=u?u.total:0}else if(k==='job'){const j=CC.jm[iv];cost=j?j.cost:0}else if(k==='stock')cost=q*(CC.avg[iv]||0);else cost=q*nv(r,'c');
+      if(k!=='custom')r.querySelector('[data-c="c"]').value=k==='stock'?(CC.avg[iv]||0).toFixed(2):(q?(cost/q).toFixed(2):'');
+      t+=q*pr;c+=cost;r.querySelector('.lt').textContent=(q*pr).toFixed(2)}
+    else{const k=r.querySelector('[data-c="p"]').value,p=CC.pm[k],nos=r.querySelector('[data-c="n"]').value.split('\n').map(x=>x.trim()).filter(Boolean);const qe=r.querySelector('[data-c="q"]');
+      const serial=p&&p.kind==='Unit';r.querySelector('[data-c="n"]').style.display=serial?'':'none';qe.readOnly=serial;if(serial)qe.value=nos.length;
+      const amt=nv(r,'q')*nv(r,'c');t+=amt;r.querySelector('.lt').textContent=amt.toFixed(2)}});
+  const cur=($('#f_cur')||{}).value;
+  $('#ltot').innerHTML=kind==='inv'?'<span>Total (USD)</span><b class="num">'+usd(t)+'</b><span class="mut">In AFN</span><span class="num">'+afn(t*rate)+'</span><span class="mut">Cost of these items</span><span class="num">'+usd(c)+'</span><span class="mut">Gross profit</span><b class="num '+cls(t-c)+'">'+usd(t-c)+'</b>':'<span>Total ('+(cur||'USD')+')</span><b class="num">'+(cur==='AFN'?afn(t):usd(t))+'</b>'+(cur==='AFN'?'<span class="mut">In USD</span><span class="num">'+usd(t/(parseFloat($('#f_rate').value)||1))+'</span>':'')}
+function lineEvents(kind,invId){
+  const box=$('#mform');
+  box.addEventListener('input',e=>{if(e.target.closest('#lbody')||e.target.id==='f_rate'||e.target.id==='f_cur')recalcLines(kind)});
+  box.addEventListener('change',e=>{const t=e.target;
+    if(kind==='inv'){const r=t.closest('tr.ln');
+      if(t.matches('[data-c="k"]')){const l=readLines('inv')[$$('#lbody .ln').indexOf(r)];r.outerHTML=lineRow('inv',{kind:t.value,qty:1,price:l.price,desc:''},invId)}
+      else if(t.matches('[data-c="i"]')){const k=r.querySelector('[data-c="k"]').value,id=+t.value;
+        if(k==='unit'){const u=CC.um[id];if(u){r.querySelector('[data-c="d"]').value=(u.prod?u.prod.name:'Container')+' - '+u.no;r.querySelector('[data-c="q"]').value=1;const pr=r.querySelector('[data-c="pr"]');if(!pr.value&&u.prod)pr.value=u.prod.price||''}}
+        else if(k==='job'){const j=CC.jm[id];if(j){r.querySelector('[data-c="d"]').value=j.j.name;r.querySelector('[data-c="q"]').value=1}}
+        else{const p=CC.pm[id];if(p){r.querySelector('[data-c="d"]').value=p.name+(p.spec?' - '+p.spec:'');const pr=r.querySelector('[data-c="pr"]');if(!pr.value||k==='stock')pr.value=p.price||pr.value}}}}
+    else if(t.matches('[data-c="p"]')){const r=t.closest('tr.ln'),p=CC.pm[t.value];if(p){r.querySelector('[data-c="d"]').value=p.name+(p.spec?' - '+p.spec:'')}}
+    recalcLines(kind)});
+  box.addEventListener('click',e=>{
+    if(e.target.closest('[data-addline]')){$('#lbody').insertAdjacentHTML('beforeend',lineRow(kind,kind==='inv'?{kind:'unit',qty:1}:{qty:1},invId));recalcLines(kind)}
+    const rm=e.target.closest('[data-rm]');if(rm){if($$('#lbody .ln').length>1)rm.closest('tr').remove();recalcLines(kind)}});
+  recalcLines(kind);
+}
+function openInvoice(id){
+  CC=calc();const rec=id?S.invoices.find(x=>x.id===id):null;
+  const vals=rec?Object.assign({},rec):{no:S.settings.nextInvoice,date:today(),rate:S.settings.rate,customerId:'',notes:''};
+  const fs=[{k:'no',l:'Invoice number',t:'number',req:1},{k:'date',l:'Date',t:'date',req:1},{k:'customerId',l:'Customer',t:'select',blank:'Walk-in / no customer',opts:custOpts},{k:'rate',l:'AFN per 1 USD',t:'number',req:1}];
+  openModal(id?'Edit invoice #'+rec.no:'New invoice',fieldsHTML(fs,vals)+'<div style="margin-top:14px">'+linesHTML('inv',rec?rec.lines:[{kind:'unit',qty:1}],id)+'</div><label style="margin-top:12px">Notes (shown on invoice)<textarea id="f_notes">'+esc(vals.notes)+'</textarea></label>'+
+    '<p class="mut" style="font-size:12px;margin:12px 0 0">For a container or job, the cost comes automatically from its purchase, expenses and materials, and updates if more costs are added later.</p>',()=>{
+    const v=readFields(fs),lines=readLines('inv').filter(l=>l.qty>0&&(l.desc||l.unitId||l.jobId||l.prodId));
+    if(!lines.length){toast('Add at least one item with a quantity');return false}
+    for(const l of lines){if(l.kind==='unit'&&!l.unitId){toast('Choose the container for each container line');return false}if(l.kind==='job'&&!l.jobId){toast('Choose the job for each job line');return false}if(l.kind==='stock'&&!l.prodId){toast('Choose the stock item');return false}}
+    const seen={};for(const l of lines){const k=l.kind==='unit'?'u'+l.unitId:l.kind==='job'?'j'+l.jobId:null;if(k){if(seen[k]){toast('The same container or job is on two lines');return false}seen[k]=1}}
+    for(const l of lines){const other=S.invoices.find(i=>(!rec||i.id!==rec.id)&&i.lines.some(x=>(l.kind==='unit'&&x.kind==='unit'&&x.unitId===l.unitId)||(l.kind==='job'&&x.kind==='job'&&x.jobId===l.jobId)));if(other){toast((l.kind==='unit'?'This container':'This job')+' is already sold on invoice #'+other.no);return false}}
+    if(!(Number.isInteger(v.no)&&v.no>0)){toast('Invoice number must be a whole number above zero');return false}
+    if(S.invoices.some(i=>i.no===v.no&&(!rec||i.id!==rec.id))){toast('Invoice number '+v.no+' already exists');return false}
+    if(!isDate(v.date)){toast('Enter a valid date');return false}
+    if(!(v.rate>0)){toast('Enter the AFN rate');return false}
+    if(v.customerId&&!S.customers.some(c=>c.id===+v.customerId)){toast('The customer no longer exists');return false}
+    for(const l of lines){if(!Number.isFinite(l.price)||l.price<0){toast('Enter a price for every line');return false}
+      if(l.kind==='unit'&&!CC.um[l.unitId]){toast('A container on this invoice no longer exists');return false}
+      if(l.kind==='job'&&!CC.jm[l.jobId]){toast('A job on this invoice no longer exists');return false}
+      if(l.kind==='stock'){const st=CC.stock.find(x=>x.p.id===l.prodId);if(!st){toast('Choose a stock item');return false}
+        const was=sum(rec?rec.lines.filter(x=>x.kind==='stock'&&x.prodId===l.prodId):[],x=>x.qty),need=sum(lines.filter(x=>x.kind==='stock'&&x.prodId===l.prodId),x=>x.qty);
+        if(need>st.on+was+1e-9){toast('Not enough '+st.p.name+' in stock (on hand '+(st.on+was)+'). Record the purchase first.');return false}
+        const old=rec&&rec.date===v.date?rec.lines.find(x=>x.kind==='stock'&&x.prodId===l.prodId&&typeof x.cost==='number'):null;
+        l.cost=old?old.cost:stockCostAsOf(CC,l.prodId,v.date)}}
+    const o={no:v.no,date:v.date,customerId:v.customerId?+v.customerId:'',rate:v.rate,notes:$('#f_notes').value,lines};
+    if(rec)Object.assign(rec,o);else{o.id=newId();S.invoices.push(o);if(o.no>=S.settings.nextInvoice)S.settings.nextInvoice=o.no+1}
+    S.jobs.forEach(j=>{});save();render();toast('Invoice saved');setTimeout(()=>openInvoiceDoc(rec?rec.id:o.id),50)},{submit:'Save invoice'});
+  lineEvents('inv',id);
+}
+function openPurchase(id){
+  CC=calc();const rec=id?S.purchases.find(x=>x.id===id):null,vals=rec?Object.assign({},rec):{date:today(),supplierId:'',paid:0,method:L('methods')[0],notes:'',cur:'USD',rate:S.settings.rate,alloc:''};
+  const fs=[{k:'date',l:'Date',t:'date',req:1},{k:'supplierId',l:'Supplier',t:'select',blank:'No supplier',opts:()=>S.suppliers.map(s=>({v:s.id,l:s.name}))},{k:'cur',l:'Prices are in',t:'select',opts:()=>opt(['USD','AFN'])},{k:'rate',l:'AFN per 1 USD',t:'number'},{k:'paid',l:'Amount paid so far (USD)',t:'number'},{k:'method',l:'Method',t:'select',opts:()=>opt(L('methods'))},{k:'alloc',l:'Split shared costs (transport...)',t:'select',opts:()=>[{v:'',l:'Use default from Settings'},{v:'qty',l:'Equally per item'},{v:'value',l:'In proportion to price'}]}];
+  openModal(id?'Edit purchase':'New purchase',fieldsHTML(fs,vals)+'<div style="margin-top:14px">'+linesHTML('pur',rec?rec.lines:[{qty:1}])+'</div><label style="margin-top:12px">Notes<textarea id="f_notes">'+esc(vals.notes)+'</textarea></label>'+
+    '<p class="mut" style="font-size:12px;margin:12px 0 0">For containers, write each container number on its own line. Each one becomes a unit with its own cost. Extra costs (transport, customs) are added later in Expenses and linked to this purchase.</p>',()=>{
+    const v=readFields(fs),lines=readLines('pur').filter(l=>l.qty>0&&(l.desc||l.prodId));
+    if(!lines.length){toast('Add at least one item');return false}
+    if(v.cur==='AFN'&&!(v.rate>0)){toast('Enter the AFN rate');return false}
+    const allNos=[];for(const l of lines){const p=CC.pm[l.prodId];if(p&&p.kind==='Unit'){if(l.nos.length!==l.qty||!l.nos.length){toast('Enter one number per container for '+p.name);return false}allNos.push(...l.nos)}else l.nos=[]}
+    if(new Set(allNos).size!==allNos.length){toast('The same container number is written twice');return false}
+    for(const no of allNos){if(S.units.some(u=>u.no===no&&(!rec||u.purchaseId!==rec.id))){toast('Container '+no+' already exists');return false}}
+    if(!isDate(v.date)){toast('Enter a valid date');return false}
+    for(const l of lines){if(!(l.price>=0)||!Number.isFinite(l.price)){toast('Enter the unit cost for every line');return false}if(!Number.isFinite(l.qty)||l.qty<=0){toast('Quantity must be more than zero');return false}if(l.prodId&&!CC.pm[l.prodId]){toast('A product on a line no longer exists');return false}}
+    if(v.supplierId&&!S.suppliers.some(x=>x.id===+v.supplierId)){toast('The supplier no longer exists');return false}
+    {const tot=sum(lines,l=>l.qty*l.price)/(v.cur==='AFN'?(v.rate||1):1);if((v.paid||0)<0){toast('Paid amount cannot be negative');return false}if((v.paid||0)>tot+0.01){toast('Paid ('+usd(v.paid)+') is more than the purchase total ('+usd(tot)+')');return false}}
+    const o={date:v.date,supplierId:v.supplierId?+v.supplierId:'',cur:v.cur,rate:v.rate||S.settings.rate,paid:v.paid||0,method:v.method,alloc:v.alloc||'',notes:$('#f_notes').value,lines};
+    if(rec)Object.assign(rec,o);else{o.id=newId();S.purchases.push(o)}
+    const blocked=syncUnits(rec||o);save();render();toast(blocked?'Saved. '+blocked+' sold container(s) were kept.':'Purchase saved')},{extra:id?'<button class="btn danger" type="button" data-del="purchases:'+id+'">Delete</button>':''});
+  lineEvents('pur');
+}
+
+/* ================= documents ================= */
+function companyHead(){const s=S.settings;return '<div class="lg"><svg role="img" aria-label="logo"><use href="#nl"/></svg><div><h1>'+esc(s.company)+'</h1><div class="tg">'+esc(s.tagline)+'</div><div class="tg">'+esc(s.address)+'</div><div class="tg mono">'+s.phones.filter(Boolean).map(esc).join(' &nbsp; ')+'</div></div></div>'}
+function invoiceDocHTML(x){
+  const i=x.i,c=x.cust;
+  return '<div class="doc"><div class="dh">'+companyHead()+'<div style="text-align:end"><div style="font-size:22px;font-weight:800">INVOICE</div><div class="mono" style="font-size:18px">No. '+i.no+'</div><div class="mono">'+esc(i.date)+'</div><div class="tg">'+jal(i.date)+'</div></div></div>'+
+   '<div style="margin-bottom:14px"><div class="tg">BILL TO</div><b style="font-size:15px">'+esc(c?c.name:'Walk-in customer')+'</b>'+(c&&c.phone?'<div class="mono">'+esc(c.phone)+'</div>':'')+(c&&(c.province||c.address)?'<div>'+esc([c.province,c.address].filter(Boolean).join(', '))+'</div>':'')+'</div>'+
+   '<table><thead><tr><th>#</th><th>Description</th><th style="text-align:end">Qty</th><th style="text-align:end">Unit price</th><th style="text-align:end">Amount</th></tr></thead><tbody>'+
+   i.lines.map((l,k)=>'<tr><td>'+(k+1)+'</td><td>'+esc(l.desc)+'</td><td class="mono" style="text-align:end">'+l.qty+'</td><td class="mono" style="text-align:end">'+usd(l.price)+'</td><td class="mono" style="text-align:end">'+usd(l.qty*l.price)+'</td></tr>').join('')+'</tbody></table>'+
+   '<div class="tt"><b>Total (USD)</b><b class="mono">'+usd(x.total)+'</b><span>Equivalent (AFN at '+i.rate+')</span><span class="mono">'+afn(x.total*i.rate)+'</span><span>Paid</span><span class="mono">'+usd(x.paid)+'</span><b>Balance due</b><b class="mono">'+usd(x.bal)+'</b></div>'+
+   (x.pays.length?'<div style="margin-top:16px"><div class="tg">PAYMENTS RECEIVED</div>'+x.pays.map(p=>'<div class="mono" style="font-size:12px">'+esc(p.date)+' &nbsp; '+usd(p.usd)+' &nbsp; '+esc(p.method)+(p.currency==='AFN'?' (AFN '+Math.round(p.amount)+')':'')+'</div>').join('')+'</div>':'')+
+   (i.notes?'<div style="margin-top:14px"><div class="tg">NOTES</div>'+esc(i.notes)+'</div>':'')+
+   '<div class="sig"><div>Prepared by</div><div>Customer signature</div></div></div>'}
+function openInvoiceDoc(id){
+  const C=calc(),x=C.im[id];if(!x)return;
+  const lc=x.i.lines.map(l=>'<tr><td>'+esc(l.desc)+'</td><td class="r">'+num(usd(l.qty*l.price))+'</td><td class="r">'+num(usd(C.lineCost(l)))+'</td><td class="r">'+num(usd(l.qty*l.price-C.lineCost(l)),cls(l.qty*l.price-C.lineCost(l)))+'</td></tr>').join('');
+  openModal('Invoice #'+x.no+' '+pill(x.status),invoiceDocHTML(x)+'<div class="act noprint"><button class="btn pri" type="button" data-print>Print / Save as PDF</button><button class="btn" type="button" data-pay="'+id+'">+ Add payment</button><button class="btn" type="button" data-editinv="'+id+'">Edit</button><button class="btn danger" type="button" data-del="invoices:'+id+'">Delete</button></div>'+
+    '<div class="noprint card" style="margin-top:14px;box-shadow:none"><h3><span>Profit on this invoice (private, not printed)</span></h3><div class="scroll"><table><thead><tr><th>Item</th><th class="r">Sold for</th><th class="r">Real cost</th><th class="r">Profit</th></tr></thead><tbody>'+lc+'</tbody></table></div>'+
+    '<div class="kv" style="margin-top:10px"><span class="mut">Expenses linked to this sale</span><span class="num">'+usd(x.lx)+'</span><b>Net profit</b><b class="num '+cls(x.net)+'">'+usd(x.net)+'</b></div></div>',null,{nosubmit:1});
+}
+function openUnit(id){
+  const C=calc(),x=C.um[id];if(!x)return;
+  const rows=[['Purchase price',x.base]];
+  if(x.share)rows.push(['Share of purchase costs (transport etc., split '+(x.pu&&x.pu.mode==='value'?'by value':'equally per item')+')',x.share]);
+  x.ee.forEach(e=>rows.push([e.date+' · '+e.category+(e.payee?' · '+e.payee:'')+(e.currency==='AFN'?' (AFN '+Math.round(e.amount)+')':''),e.usd]));
+  x.mm.forEach(m=>rows.push([m.date+' · Material: '+(C.pm[m.prodId]?C.pm[m.prodId].name:'?')+' x '+m.qty,m.cost]));
+  openModal('Container '+esc(x.no)+' '+pill(x.status),'<div class="grid g-eq"><div><div class="kv"><span class="mut">Type</span><span>'+esc(x.prod?x.prod.name:'-')+'</span><span class="mut">Acquired</span><span class="num">'+esc(x.u.date||'-')+'</span><span class="mut">Bought from</span><span>'+esc(x.pu&&x.pu.sup?x.pu.sup.name:'-')+'</span>'+(x.soldInvO?'<span class="mut">Sold on</span><span>Invoice #'+x.soldInvO.no+' ('+esc(x.soldInvO.cust?x.soldInvO.cust.name:'Walk-in')+')</span><span class="mut">Sale price</span><span class="num">'+usd(x.price)+'</span>':'')+'</div></div>'+
+    '<div><div class="kv">'+rows.map(r=>'<span>'+esc(r[0])+'</span><span class="num">'+usd(r[1])+'</span>').join('')+'<b>Total cost</b><b class="num">'+usd(x.total)+'</b>'+(x.soldInvO?'<b>Net profit</b><b class="num '+cls(x.net)+'">'+usd(x.net)+'</b>':'')+'</div></div></div>',null,{nosubmit:1});
+  $('#mform').insertAdjacentHTML('beforeend','<div class="act noprint"><button class="btn pri" type="button" data-addexp="unit:'+id+'">+ Add expense (wage, transport...)</button><button class="btn" type="button" data-addmat="unit:'+id+'">+ Use material</button><button class="btn" type="button" data-edit="units:'+id+'">Edit</button></div>');
+}
+function openJob(id){
+  const C=calc(),x=C.jm[id];if(!x)return;
+  const rows=[];x.ee.forEach(e=>rows.push([e.date+' · '+e.category+(e.payee?' · '+e.payee:'')+(e.currency==='AFN'?' (AFN '+Math.round(e.amount)+')':''),e.usd]));
+  x.mm.forEach(m=>rows.push([m.date+' · Material: '+(C.pm[m.prodId]?C.pm[m.prodId].name:'?')+' x '+m.qty,m.cost]));
+  openModal(esc(x.j.name)+' '+pill(x.j.status),'<div class="grid g-eq"><div class="kv"><span class="mut">Type</span><span>'+esc(x.j.type)+'</span><span class="mut">Customer</span><span>'+esc(x.cust?x.cust.name:'-')+'</span><span class="mut">Started</span><span class="num">'+esc(x.j.start||'-')+'</span><span class="mut">Due</span><span class="num">'+esc(x.j.due||'-')+'</span>'+(x.soldInvO?'<span class="mut">Sold on</span><span>Invoice #'+x.soldInvO.no+'</span><span class="mut">Sale price</span><span class="num">'+usd(x.price)+'</span>':'<span class="mut">Not invoiced yet</span><span></span>')+'</div>'+
+    '<div><div class="kv">'+(rows.length?rows.map(r=>'<span>'+esc(r[0])+'</span><span class="num">'+usd(r[1])+'</span>').join(''):'<span class="mut">No costs recorded yet</span><span></span>')+'<b>Total cost so far</b><b class="num">'+usd(x.cost)+'</b>'+(x.soldInvO?'<b>Net profit</b><b class="num '+cls(x.net)+'">'+usd(x.net)+'</b>':'')+'</div></div></div>',null,{nosubmit:1});
+  $('#mform').insertAdjacentHTML('beforeend','<div class="act noprint"><button class="btn pri" type="button" data-addexp="job:'+id+'">+ Add expense (wage...)</button><button class="btn" type="button" data-addmat="job:'+id+'">+ Use material</button><button class="btn" type="button" data-edit="jobs:'+id+'">Edit</button></div>');
+}
+
+/* ================= period bar ================= */
+const PRESETS=[['today','Today'],['week','This week'],['month','This month'],['lastmonth','Last month'],['quarter','This quarter'],['year','This year'],['lastyear','Last year'],['last12','Last 12 months'],['all','All time'],['custom','Custom dates']];
+function curRange(){return rangeFor(P.preset,cal(),S.settings.fiscal,S)}
+function periodBar(){
+  const r=curRange(),isC=P.preset==='custom';
+  return '<div class="card pbar noprint"><div class="f"><label>Period<select id="p_preset">'+PRESETS.map(p=>'<option value="'+p[0]+'"'+(p[0]===P.preset?' selected':'')+'>'+p[1]+'</option>').join('')+'</select></label>'+
+   (isC?'<label>From<input type="date" id="p_from" value="'+P.from+'"></label><label>To<input type="date" id="p_to" value="'+P.to+'"></label>':'')+
+   '<label>Calendar<span class="seg" style="align-self:flex-start"><button type="button" data-cal="greg" aria-pressed="'+(cal()==='greg')+'">Gregorian</button><button type="button" data-cal="jalali" aria-pressed="'+(cal()==='jalali')+'">Solar Hijri</button></span></label>'+
+   '<label style="flex-direction:row;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:13px"><input type="checkbox" id="p_cmp" style="width:auto"'+(P.compare?' checked':'')+'> Compare with previous period</label></div>'+
+   '<div class="ptxt" style="margin-top:10px"><b class="num">'+r.from+'</b> to <b class="num">'+r.to+'</b> &nbsp;&middot;&nbsp; '+jal(r.from)+' to '+jal(r.to)+'</div></div>'}
+
+/* ================= views ================= */
+function vDash(C){
+  const r=curRange(),st=statsFor(C,r),pv=r.prev?statsFor(C,r.prev):null;
+  let h='';
+  if(S.demo)h+='<div class="banner"><span>This system contains <b>example data</b> (invoices 40 to 44, sample containers, jobs, purchases and expenses). Clear it before you start entering real records. New invoices then start from number 1.</span><button class="btn sm danger" data-act="clearDemo">Clear examples</button></div>';
+  h+=periodBar();
+  h+='<div class="grid g-kpi">'+kpi('Sales',st.sales,st.sales,pv&&pv.sales)+kpi('Real cost of items sold',st.cost,st.cost,pv&&pv.cost,{lowerBetter:1})+kpi('Gross profit',st.gross,st.gross,pv&&pv.gross,{c:cls(st.gross)})+kpi('General expenses',st.opex,st.opex,pv&&pv.opex,{lowerBetter:1,sub:'Rent, salaries... not linked to an item'})+
+    kpi('Net profit',st.net,st.net,pv&&pv.net,{c:cls(st.net)})+kpi('Collected',st.coll,st.coll,pv&&pv.coll,{c:'pos'})+kpi('Receivables (end of period)',recAt(C,r.to),recAt(C,r.to),null,{c:'warnc',sub:'Owed by customers'})+kpi('Stock value now',C.stockVal,0,null,{sub:'Containers, materials and jobs in progress, at real cost'})+'</div>';
+  const byProd={};C.inv.filter(x=>x.date>=r.from&&x.date<=r.to).forEach(x=>x.i.lines.forEach(l=>{let nm=l.kind==='unit'?(C.um[l.unitId]&&C.um[l.unitId].prod?C.um[l.unitId].prod.name:'Container'):l.kind==='job'?(C.jm[l.jobId]?C.jm[l.jobId].j.type:'Job'):(C.pm[l.prodId]?C.pm[l.prodId].name:'Other');const g=byProd[nm]=byProd[nm]||{k:nm,v:0};g.v+=l.qty*l.price-C.lineCost(l)}));
+  const bp=Object.values(byProd).sort((a,b)=>b.v-a.v).slice(0,7);
+  const top=Object.values(C.inv.filter(x=>x.date>=r.from&&x.date<=r.to).reduce((m,x)=>{const k=x.cust?x.cust.name:'Walk-in';(m[k]=m[k]||{k,v:0}).v+=x.total;return m},{})).sort((a,b)=>b.v-a.v).slice(0,6);
+  const ec=Object.values(S.expenses.filter(e=>e.date>=r.from&&e.date<=r.to).reduce((m,e)=>{(m[e.category]=m[e.category]||{k:e.category,v:0}).v+=e.usd;return m},{})).sort((a,b)=>b.v-a.v);
+  h+='<div class="grid g-2"><div class="card"><h3><span>Months in view</span></h3>'+monthChart(C,r)+'</div><div class="card"><h3><span>Unpaid invoices</span></h3>'+
+   table([{h:'No'},{h:'Customer'},{h:'Balance',r:1}],C.inv.filter(x=>x.bal>.005).slice(0,8).map(x=>({attr:'data-inv="'+x.id+'"',cells:['#'+x.no,esc(x.cust?x.cust.name:'Walk-in'),num(usd(x.bal),'warnc')]})))+'</div></div>';
+  h+='<div class="grid g-auto"><div class="card"><h3><span>Net profit by item type</span></h3>'+barRows(bp,usd,'var(--win)')+'</div><div class="card"><h3><span>Top customers by sales</span></h3>'+barRows(top,usd)+'</div><div class="card"><h3><span>All money spent by category</span></h3>'+barRows(ec,usd,'var(--loss)')+'</div>'+
+   '<div class="card"><h3><span>Stock alerts</span></h3>'+(C.stock.filter(s=>s.st!=='OK').length?C.stock.filter(s=>s.st!=='OK').map(s=>'<div class="brow" style="grid-template-columns:1fr auto"><span class="lab">'+esc(s.p.name)+'</span><span>'+num(s.on)+' '+pill(s.st)+'</span></div>').join(''):'<div class="empty">All stock items are fine.</div>')+'</div></div>';
+  return h;
+}
+function searchBar(ph,extra){return '<div class="filters"><input type="search" id="q" placeholder="'+ph+'" value="'+esc(q)+'">'+(extra||'')+'</div>'}
+const hit=txt=>!q||txt.toLowerCase().includes(q.toLowerCase());
+function invRows(C){return C.inv.filter(x=>hit('#'+x.no+' '+(x.cust?x.cust.name:'')+' '+x.date+' '+x.status+' '+x.i.lines.map(l=>l.desc).join(' '))).map(x=>({attr:'data-inv="'+x.id+'"',cells:['<b>#'+x.no+'</b>',dual(x.date),esc(x.cust?x.cust.name:'Walk-in'),num(usd(x.total)),num(usd(x.paid)),num(usd(x.bal),x.bal>.005?'warnc':''),pill(x.status),num(usd(x.net),cls(x.net))]}))}
+const invCols=[{h:'No'},{h:'Date'},{h:'Customer'},{h:'Total',r:1},{h:'Paid',r:1},{h:'Balance',r:1},{h:'Status'},{h:'Net profit',r:1}];
+const vInv=C=>'<div class="hd"><h2 class="sec-title">Invoices</h2><button class="btn pri" data-act="newInv">+ New invoice</button></div>'+searchBar('Search number, customer, item...')+'<div class="card" style="padding:4px 8px" id="tbl">'+table(invCols,invRows(C))+'</div>';
+function payRows(C){return S.payments.slice().sort((a,b)=>a.date<b.date?1:-1).map(p=>({p,x:C.im[p.invoiceId]})).filter(r=>hit(r.p.date+' '+r.p.method+' '+(r.x?'#'+r.x.no+' '+(r.x.cust?r.x.cust.name:''):''))).map(r=>({attr:'data-edit="payments:'+r.p.id+'"',cells:[dual(r.p.date),r.x?'#'+r.x.no:'-',esc(r.x&&r.x.cust?r.x.cust.name:'-'),esc(r.p.method),num(usd(r.p.usd),'pos')+(r.p.currency==='AFN'?'<span class="sub">AFN '+Math.round(r.p.amount)+' @ '+r.p.rate+'</span>':''),esc(r.p.notes||'')]}))}
+const payCols=[{h:'Date'},{h:'Invoice'},{h:'Customer'},{h:'Method'},{h:'Amount',r:1},{h:'Notes'}];
+const vPay=C=>'<div class="hd"><h2 class="sec-title">Payments received</h2><button class="btn pri" data-new="payments">+ Add payment</button></div>'+searchBar('Search date, method, customer...')+'<div class="card" style="padding:4px 8px" id="tbl">'+table(payCols,payRows(C))+'</div>';
+function custRows(C){return S.customers.filter(c=>hit(c.name+' '+c.phone+' '+c.province+' '+c.type)).map(c=>{const xs=C.inv.filter(x=>x.cust&&x.cust.id===c.id),bal=sum(xs,x=>x.bal);return {attr:'data-edit="customers:'+c.id+'"',cells:['<b>'+esc(c.name)+'</b>',esc(c.type),esc(c.phone),esc(c.province),num(xs.length),num(usd(sum(xs,x=>x.total))),num(usd(bal),bal>.005?'warnc':'')+'<button class="btn sm" style="margin-inline-start:8px" data-stmt="'+c.id+'">Statement</button>']}})}
+const custCols=[{h:'Name'},{h:'Type'},{h:'Phone'},{h:'Province'},{h:'Invoices',r:1},{h:'Total sales',r:1},{h:'Balance owed',r:1}];
+const vCust=C=>'<div class="hd"><h2 class="sec-title">Customers</h2><button class="btn pri" data-new="customers">+ New customer</button></div>'+searchBar('Search name, phone, province...')+'<div class="card" style="padding:4px 8px" id="tbl">'+table(custCols,custRows(C))+'</div>';
+function prodRows(C){const sk={};C.stock.forEach(s=>sk[s.p.id]=s);return S.products.filter(p=>hit(p.name+' '+p.category+' '+p.spec)).map(p=>{const kd={Service:'Service / job',Stock:'Stock item',Unit:'Individual units'}[p.kind];
+  const inf=p.kind==='Stock'?num(sk[p.id].on)+' '+pill(sk[p.id].st)+'<span class="sub">avg cost '+usd(sk[p.id].avg)+'</span>':p.kind==='Unit'?num(C.units.filter(u=>u.u.prodId===p.id&&!u.soldInv).length)+' in stock':'<span class="mut">-</span>';
+  return {attr:'data-edit="products:'+p.id+'"',cells:['<b>'+esc(p.name)+'</b>'+(p.spec?'<span class="sub">'+esc(p.spec)+'</span>':''),esc(p.category),kd,esc(p.unit),num(usd(p.price)),inf]}})}
+const prodCols=[{h:'Name'},{h:'Category'},{h:'Tracked as'},{h:'Unit'},{h:'Usual price',r:1},{h:'In stock'}];
+const vProd=C=>'<div class="hd"><h2 class="sec-title">Products &amp; services</h2><button class="btn pri" data-new="products">+ New product</button></div>'+searchBar('Search products...')+'<div class="card" style="padding:4px 8px" id="tbl">'+table(prodCols,prodRows(C))+'</div>';
+function unitRows(C){return C.units.filter(x=>(fil==='all'||(fil==='stock'&&!x.soldInv)||(fil==='sold'&&x.soldInv))&&hit(x.no+' '+(x.prod?x.prod.name:'')+' '+x.status)).map(x=>({attr:'data-unit="'+x.id+'"',cells:['<b>'+esc(x.no)+'</b>',esc(x.prod?x.prod.name:'-'),dual(x.u.date),num(usd(x.base)),num(usd(x.total-x.base),'mut'),num(usd(x.total)),pill(x.status),x.soldInvO?'#'+x.soldInvO.no:'-',x.soldInvO?num(usd(x.price)):'-',x.soldInvO?num(usd(x.net),cls(x.net)):'-']}))}
+const unitCols=[{h:'Number'},{h:'Type'},{h:'Acquired'},{h:'Purchase price',r:1},{h:'Extra costs',r:1},{h:'Total cost',r:1},{h:'Status'},{h:'Invoice'},{h:'Sold for',r:1},{h:'Net profit',r:1}];
+function vUnits(C){const inS=C.units.filter(x=>!x.soldInv);return '<div class="hd"><h2 class="sec-title">Containers / units</h2><button class="btn pri" data-new="units">+ Add unit manually</button></div><p class="mut" style="margin:0;font-size:12px">Units are created when you record a purchase with container numbers. Click a unit to see its full cost and add wages, transport or materials to it. In stock: <b class="num">'+inS.length+'</b> units worth <b class="num">'+usd(sum(inS,x=>x.total))+'</b>.</p>'+
+  searchBar('Search number or type...','<span class="chips">'+[['all','All'],['stock','In stock'],['sold','Sold']].map(c=>'<button class="chip" type="button" data-fil="'+c[0]+'" aria-pressed="'+(fil===c[0])+'">'+c[1]+'</button>').join('')+'</span>')+'<div class="card" style="padding:4px 8px" id="tbl">'+table(unitCols,unitRows(C))+'</div>'}
+function jobRows(C){return C.jobs.filter(x=>(fil==='all'||(fil==='open'&&!x.soldInv)||(fil==='sold'&&x.soldInv))&&hit(x.j.name+' '+x.j.type+' '+x.j.status+' '+(x.cust?x.cust.name:''))).map(x=>({attr:'data-job="'+x.id+'"',cells:['<b>'+esc(x.j.name)+'</b>',esc(x.j.type),esc(x.cust?x.cust.name:'-'),pill(x.j.status),dual(x.j.due),num(usd(x.cost)),x.soldInvO?'#'+x.soldInvO.no:'<span class="mut">not invoiced</span>',x.soldInvO?num(usd(x.price)):'-',x.soldInvO?num(usd(x.net),cls(x.net)):'-']}))}
+const jobCols=[{h:'Job'},{h:'Type'},{h:'Customer'},{h:'Status'},{h:'Due'},{h:'Cost so far',r:1},{h:'Invoice'},{h:'Sold for',r:1},{h:'Net profit',r:1}];
+const vJobs=C=>'<div class="hd"><h2 class="sec-title">Jobs</h2><button class="btn pri" data-new="jobs">+ New job</button></div><p class="mut" style="margin:0;font-size:12px">A job is anything you build: modular office, mobile toilet, container modification, custom work. Add wages, materials and other costs to it, then put the job on an invoice.</p>'+
+  searchBar('Search jobs...','<span class="chips">'+[['all','All'],['open','Not invoiced'],['sold','Invoiced']].map(c=>'<button class="chip" type="button" data-fil="'+c[0]+'" aria-pressed="'+(fil===c[0])+'">'+c[1]+'</button>').join('')+'</span>')+'<div class="card" style="padding:4px 8px" id="tbl">'+table(jobCols,jobRows(C))+'</div>';
+function vStock(C){
+  const rows=C.stock.map(s=>({cells:['<b>'+esc(s.p.name)+'</b>',num(s.adj),num(s.bought),num(s.sold),num(s.used),num(s.on,s.st==='OK'?'':s.st==='LOW'?'warnc':'neg'),num(usd(s.avg)),num(usd(Math.max(0,s.val))),pill(s.st)]}));
+  const adj=S.adjust.slice().sort((a,b)=>a.date<b.date?1:-1).map(a=>{const p=C.pm[a.prodId];return {attr:'data-edit="adjust:'+a.id+'"',cells:[dual(a.date),esc(p?p.name:'?'),num(a.qty>0?'+'+a.qty:a.qty,cls(a.qty)),esc(a.reason||'')]}});
+  const mats=S.materials.slice().sort((a,b)=>a.date<b.date?1:-1).map(m=>{const p=C.pm[m.prodId],t=m.targetType==='unit'?C.um[m.targetId]:C.jm[m.targetId];return {attr:'data-edit="materials:'+m.id+'"',cells:[dual(m.date),esc(p?p.name:'?'),num(m.qty),esc(m.targetType==='unit'?'Container '+(t?t.no:'?'):'Job: '+(t?t.j.name:'?')),num(usd(m.cost))]}});
+  return '<div class="hd"><h2 class="sec-title">Stock and materials</h2><span style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn pri" data-new="materials">+ Use material</button><button class="btn" data-new="adjust">+ Adjust stock</button></span></div><p class="mut" style="margin:0;font-size:12px">Stock items: on hand = adjustments + bought - sold - used. Containers are on the Containers tab. Cost uses the average price paid, including shared purchase costs.</p>'+
+   '<div class="card" style="padding:4px 8px">'+table([{h:'Item'},{h:'Opening',r:1},{h:'Bought',r:1},{h:'Sold',r:1},{h:'Used',r:1},{h:'On hand',r:1},{h:'Avg cost',r:1},{h:'Value',r:1},{h:'Status'}],rows,['Total','','','','','','',num(usd(sum(C.stock,s=>Math.max(0,s.val)))),''])+'</div>'+
+   '<div class="grid g-eq"><div class="card"><h3><span>Materials used</span></h3>'+table([{h:'Date'},{h:'Material'},{h:'Qty',r:1},{h:'Used for'},{h:'Cost',r:1}],mats)+'</div><div class="card"><h3><span>Adjustment history</span></h3>'+table([{h:'Date'},{h:'Item'},{h:'Qty',r:1},{h:'Reason'}],adj)+'</div></div>'}
+function vPur(C){
+  const seg='<span class="seg"><button data-sub="pur" aria-pressed="'+(sub==='pur')+'">Purchases</button><button data-sub="sup" aria-pressed="'+(sub==='sup')+'">Suppliers</button></span>';
+  if(sub==='sup'){const rows=S.suppliers.filter(s=>hit(s.name+' '+s.phone)).map(s=>{const ps=C.pur.filter(x=>x.u.supplierId===s.id);return {attr:'data-edit="suppliers:'+s.id+'"',cells:['<b>'+esc(s.name)+'</b>',esc(s.phone),esc(s.address),num(ps.length),num(usd(sum(ps,x=>x.total))),num(usd(sum(ps,x=>x.due)),sum(ps,x=>x.due)>.005?'warnc':'')]}});
+    return '<div class="hd"><h2 class="sec-title">Suppliers</h2><span style="display:flex;gap:10px">'+seg+'<button class="btn pri" data-new="suppliers">+ New supplier</button></span></div>'+searchBar('Search suppliers...')+'<div class="card" style="padding:4px 8px" id="tbl">'+table([{h:'Name'},{h:'Phone'},{h:'Address'},{h:'Purchases',r:1},{h:'Total bought',r:1},{h:'We owe',r:1}],rows)+'</div>'}
+  const rows=C.pur.filter(x=>hit((x.sup?x.sup.name:'')+' '+x.date+' '+x.u.lines.map(l=>l.desc+' '+(l.nos||[]).join(' ')).join(' '))).map(x=>({attr:'data-pur="'+x.id+'"',cells:[dual(x.date),esc(x.sup?x.sup.name:'-'),esc(x.u.lines.map(l=>l.qty+' x '+l.desc).join(', ').slice(0,60)),num(usd(x.total))+(x.u.cur==='AFN'?'<span class="sub">in AFN @ '+x.u.rate+'</span>':''),num(usd(x.expTot),'mut'),num(usd(x.paid)),num(usd(x.due),x.due>.005?'warnc':'')]}));
+  return '<div class="hd"><h2 class="sec-title">Purchases</h2><span style="display:flex;gap:10px">'+seg+'<button class="btn pri" data-act="newPur">+ New purchase</button></span></div>'+searchBar('Search supplier, item, container number...')+'<div class="card" style="padding:4px 8px" id="tbl">'+table([{h:'Date'},{h:'Supplier'},{h:'Items'},{h:'Total',r:1},{h:'Linked costs',r:1},{h:'Paid',r:1},{h:'We owe',r:1}],rows)+'</div>'}
+function expTargetName(C,e){if(e.linkType==='unit'){const u=C.um[e.linkId];return 'Container '+(u?u.no:'?')}if(e.linkType==='job'){const j=C.jm[e.linkId];return 'Job: '+(j?j.j.name:'?')}if(e.linkType==='purchase'){const p=C.pum[e.linkId];return 'Purchase '+(p?p.date:'?')}if(e.linkType==='invoice'){const i=C.im[e.linkId];return 'Invoice #'+(i?i.no:'?')}return 'General'}
+function expRows(C){return S.expenses.slice().sort((a,b)=>a.date<b.date?1:-1).filter(e=>hit(e.date+' '+e.category+' '+e.payee+' '+e.desc+' '+expTargetName(C,e))).map(e=>({e,attr:'data-edit="expenses:'+e.id+'"',cells:[dual(e.date),esc(e.category),esc(e.payee||''),e.linkType==='none'?'<span class="mut">General</span>':esc(expTargetName(C,e)),esc(e.method),num(usd(e.usd),'neg')+(e.currency==='AFN'?'<span class="sub">AFN '+Math.round(e.amount)+'</span>':'')]}))}
+const expCols=[{h:'Date'},{h:'Category'},{h:'Paid to'},{h:'Belongs to'},{h:'Method'},{h:'Amount',r:1}];
+function vExp(C){const rows=expRows(C),tot=sum(rows,r=>r.e.usd);return '<div class="hd"><h2 class="sec-title">Expenses</h2><button class="btn pri" data-new="expenses">+ New expense</button></div><p class="mut" style="margin:0;font-size:12px">Link each cost to the container, job or purchase it belongs to, so profit shows the real cost. Leave it as General for rent, salaries and similar.</p>'+searchBar('Search category, payee, container, job...')+'<div class="card" style="padding:4px 8px" id="tbl">'+table(expCols,rows,['Total shown','','','','',num(usd(tot),'neg')])+'</div>'}
+
+/* ================= reports ================= */
+const RTYPES=[['summary','Monthly and yearly summary'],['sales','Sales'],['profit','Profit by invoice'],['units','Container profit'],['jobs','Job profit'],['prod','Profit by product'],['recv','Receivables by customer'],['stmt','Customer statement'],['exp','Expenses'],['cash','Cash flow by month'],['stock','Stock valuation'],['pay','Supplier payables']];
+const U=v=>({v:v,f:'usd'}),PC=v=>({v:v,f:'pct'});
+function buildReport(C){
+  const r=curRange(),T=RTYPES.find(x=>x[0]===R.type)[1],o={title:T,tables:[]},inR=d=>d>=r.from&&d<=r.to;
+  if(R.type==='summary'){
+    const ms=monthsIn(cal(),r.from,r.to),fs=S.settings.fiscal;
+    const row=(label,x)=>{const s=statsFor(C,x);return [label,U(s.sales),U(s.cost),U(s.gross),U(s.opex),U(s.net),U(s.coll)]};
+    const cols=['Period','Sales','Real cost of items sold','Gross profit','General expenses','Net profit','Collected'];
+    const mr=ms.map(m=>row(monthName(cal(),m.y,m.m),m));
+    o.tables.push({title:'By month',cols,rows:mr,foot:['Total',...[1,2,3,4,5,6].map(j=>U(sum(mr,x=>x[j].v)))]});
+    const yrs={};ms.forEach(m=>{const fy=m.m>=fs?m.y:m.y-1;(yrs[fy]=yrs[fy]||[]).push(m)});
+    const yr=Object.keys(yrs).sort().map(k=>row((fs>1?'Fiscal year ':'Year ')+k,{from:yrs[k][0].from,to:yrs[k][yrs[k].length-1].to}));
+    o.tables.push({title:'By year',cols,rows:yr,foot:['Total',...[1,2,3,4,5,6].map(j=>U(sum(yr,x=>x[j].v)))]})}
+  if(R.type==='sales'){const xs=C.inv.filter(x=>inR(x.date)).sort((a,b)=>a.no-b.no);o.tables.push({cols:['Invoice','Date','Customer','Total','Paid','Balance','Gross profit'],rows:xs.map(x=>['#'+x.no,x.date,x.cust?x.cust.name:'Walk-in',U(x.total),U(x.paid),U(x.bal),U(x.gross)]),foot:['Total','','',U(sum(xs,x=>x.total)),U(sum(xs,x=>x.paid)),U(sum(xs,x=>x.bal)),U(sum(xs,x=>x.gross))]})}
+  if(R.type==='profit'){const xs=C.inv.filter(x=>inR(x.date)).sort((a,b)=>a.no-b.no);o.tables.push({cols:['Invoice','Date','Customer','Sales','Real cost','Gross','Linked expenses','Net profit','Margin'],rows:xs.map(x=>['#'+x.no,x.date,x.cust?x.cust.name:'Walk-in',U(x.total),U(x.cost),U(x.gross),U(x.lx),U(x.net),PC(x.total?x.net/x.total*100:0)]),foot:['Total','','',U(sum(xs,x=>x.total)),U(sum(xs,x=>x.cost)),U(sum(xs,x=>x.gross)),U(sum(xs,x=>x.lx)),U(sum(xs,x=>x.net)),PC(sum(xs,x=>x.total)?sum(xs,x=>x.net)/sum(xs,x=>x.total)*100:0)]})}
+  if(R.type==='units'){const us=C.units.filter(x=>x.soldInvO?inR(x.soldInvO.date):false).sort((a,b)=>a.no<b.no?-1:1);o.title='Container profit (sold in period)';
+    o.tables.push({title:'Sold containers',cols:['Number','Type','Purchase price','Purchase costs share','Expenses','Materials','Total cost','Sold for','Net profit','Margin'],rows:us.map(x=>[x.no,x.prod?x.prod.name:'',U(x.base),U(x.share),U(x.expD),U(x.matD),U(x.total),U(x.price),U(x.net),PC(x.price?x.net/x.price*100:0)]),foot:['Total','',U(sum(us,x=>x.base)),U(sum(us,x=>x.share)),U(sum(us,x=>x.expD)),U(sum(us,x=>x.matD)),U(sum(us,x=>x.total)),U(sum(us,x=>x.price)),U(sum(us,x=>x.net)),'']});
+    const st=C.units.filter(x=>!x.soldInv);o.tables.push({title:'Containers in stock now',cols:['Number','Type','Purchase price','Extra costs','Total cost'],rows:st.map(x=>[x.no,x.prod?x.prod.name:'',U(x.base),U(x.total-x.base),U(x.total)]),foot:['Total','','','',U(sum(st,x=>x.total))]})}
+  if(R.type==='jobs'){const js=C.jobs.filter(x=>x.soldInvO?inR(x.soldInvO.date):false);o.title='Job profit (invoiced in period)';
+    o.tables.push({title:'Invoiced jobs',cols:['Job','Type','Customer','Wages and expenses','Materials','Total cost','Sold for','Net profit','Margin'],rows:js.map(x=>[x.j.name,x.j.type,x.cust?x.cust.name:'-',U(x.expD),U(x.matD),U(x.cost),U(x.price),U(x.net),PC(x.price?x.net/x.price*100:0)]),foot:['Total','','',U(sum(js,x=>x.expD)),U(sum(js,x=>x.matD)),U(sum(js,x=>x.cost)),U(sum(js,x=>x.price)),U(sum(js,x=>x.net)),'']});
+    const op=C.jobs.filter(x=>!x.soldInv);o.tables.push({title:'Jobs not invoiced yet',cols:['Job','Status','Cost so far'],rows:op.map(x=>[x.j.name,x.j.status,U(x.cost)]),foot:['Total','',U(sum(op,x=>x.cost))]})}
+  if(R.type==='prod'){const m={};C.inv.filter(x=>inR(x.date)).forEach(x=>x.i.lines.forEach(l=>{let nm,pid=l.prodId;if(l.kind==='unit'){const u=C.um[l.unitId];nm=u&&u.prod?u.prod.name:'Container'}else if(l.kind==='job'){const j=C.jm[l.jobId];nm='Job: '+(j?j.j.type:'')}else nm=C.pm[pid]?C.pm[pid].name:'Other';
+      const g=m[nm]=m[nm]||{k:nm,q:0,rev:0,cost:0};g.q+=l.qty;g.rev+=l.qty*l.price;g.cost+=C.lineCost(l)}));
+    const rs=Object.values(m).sort((a,b)=>(b.rev-b.cost)-(a.rev-a.cost));o.tables.push({cols:['Product / type','Sold qty','Revenue','Real cost','Net profit','Margin'],rows:rs.map(g=>[g.k,g.q,U(g.rev),U(g.cost),U(g.rev-g.cost),PC(g.rev?(g.rev-g.cost)/g.rev*100:0)]),foot:['Total',sum(rs,g=>g.q),U(sum(rs,g=>g.rev)),U(sum(rs,g=>g.cost)),U(sum(rs,g=>g.rev-g.cost)),'']});
+    const bm={};C.pur.filter(x=>inR(x.date)).forEach(x=>x.lines.forEach(ln=>{const p=C.pm[ln.l.prodId],k=p?p.name:ln.l.desc,g=bm[k]=bm[k]||{k,q:0,c:0};g.q+=ln.qty;g.c+=ln.qty*(ln.usd+ln.share)}));
+    const bs=Object.values(bm);o.tables.push({title:'Bought in the same period',cols:['Product','Qty bought','Cost incl. shared costs'],rows:bs.map(g=>[g.k,g.q,U(g.c)]),foot:['Total',sum(bs,g=>g.q),U(sum(bs,g=>g.c))]})}
+  if(R.type==='recv'){o.title='Money owed to us on '+r.to;const m={};C.inv.filter(x=>x.date<=r.to).forEach(x=>{const pd=sum(x.pays.filter(p=>p.date<=r.to),p=>p.usd),bl=x.total-pd;if(bl<=.005)return;const k=x.cust?x.cust.name:'Walk-in',g=m[k]=m[k]||{k,n:0,t:0,p:0,b:0};g.n++;g.t+=x.total;g.p+=pd;g.b+=bl});const rs=Object.values(m).sort((a,b)=>b.b-a.b);o.tables.push({cols:['Customer','Open invoices','Invoiced','Paid','Balance owed'],rows:rs.map(g=>[g.k,g.n,U(g.t),U(g.p),U(g.b)]),foot:['Total',sum(rs,g=>g.n),U(sum(rs,g=>g.t)),U(sum(rs,g=>g.p)),U(sum(rs,g=>g.b))]})}
+  if(R.type==='stmt'){const c=S.customers.find(x=>x.id===+R.cust)||S.customers[0];if(!c){o.tables.push({cols:['Info'],rows:[['No customers yet']]});return o}o.title='Statement: '+c.name;const ev=[];C.inv.filter(x=>x.cust&&x.cust.id===c.id&&x.date<=r.to).forEach(x=>{ev.push({d:x.date,t:'Invoice #'+x.no,db:x.total,cr:0});x.pays.filter(p=>p.date<=r.to).forEach(p=>ev.push({d:p.date,t:'Payment ('+p.method+') for #'+x.no,db:0,cr:p.usd}))});ev.sort((a,b)=>a.d<b.d?-1:1);let bal=0;
+    o.tables.push({cols:['Date','Description','Charged','Paid','Balance'],rows:ev.map(e=>{bal+=e.db-e.cr;return [e.d,e.t,e.db?U(e.db):'',e.cr?U(e.cr):'',U(bal)]}),foot:['Balance owed','',U(sum(ev,e=>e.db)),U(sum(ev,e=>e.cr)),U(bal)]})}
+  if(R.type==='exp'){const es=S.expenses.filter(e=>inR(e.date)).sort((a,b)=>a.date<b.date?-1:1),m={};es.forEach(e=>{const g=m[e.category]=m[e.category]||{k:e.category,n:0,v:0};g.n++;g.v+=e.usd});
+    o.tables.push({title:'By category',cols:['Category','Records','Total'],rows:Object.values(m).sort((a,b)=>b.v-a.v).map(g=>[g.k,g.n,U(g.v)]),foot:['Total',es.length,U(sum(es,e=>e.usd))]});
+    o.tables.push({title:'All records',cols:['Date','Category','Paid to','Belongs to','Amount'],rows:es.map(e=>[e.date,e.category,e.payee||'',expTargetName(C,e),U(e.usd)])})}
+  if(R.type==='cash'){const ks={};const add=(k,f,v)=>{const g=ks[k]=ks[k]||{k,i:0,e:0,s:0};g[f]+=v};S.payments.filter(p=>inR(p.date)).forEach(p=>add(mkey(p.date),'i',p.usd));S.expenses.filter(e=>inR(e.date)).forEach(e=>add(mkey(e.date),'e',e.usd));S.purchases.filter(p=>inR(p.date)).forEach(p=>add(mkey(p.date),'s',p.paid||0));
+    const rs=Object.values(ks).sort((a,b)=>a.k<b.k?-1:1);o.tables.push({cols:['Month (Gregorian)','Money in','Expenses paid','Supplier payments','Net cash'],rows:rs.map(g=>[g.k,U(g.i),U(g.e),U(g.s),U(g.i-g.e-g.s)]),foot:['Total',U(sum(rs,g=>g.i)),U(sum(rs,g=>g.e)),U(sum(rs,g=>g.s)),U(sum(rs,g=>g.i-g.e-g.s))]})}
+  if(R.type==='stock'){const us=C.units.filter(x=>!x.soldInv);o.tables.push({title:'Containers in stock',cols:['Number','Type','Total cost'],rows:us.map(x=>[x.no,x.prod?x.prod.name:'',U(x.total)]),foot:['Total','',U(sum(us,x=>x.total))]});
+    o.tables.push({title:'Stock items',cols:['Item','On hand','Avg cost','Value','Status'],rows:C.stock.map(s=>[s.p.name,s.on,U(s.avg),U(Math.max(0,s.val)),s.st]),foot:['Total','','',U(sum(C.stock,s=>Math.max(0,s.val))),'']});
+    const jb=C.jobs.filter(x=>!x.soldInv);o.tables.push({title:'Jobs in progress (cost so far)',cols:['Job','Status','Cost so far'],rows:jb.map(x=>[x.j.name,x.j.status,U(x.cost)]),foot:['Total','',U(sum(jb,x=>x.cost))]})}
+  if(R.type==='pay'){const rs=C.pur.filter(x=>x.due>.005);o.tables.push({cols:['Date','Supplier','Total','Paid','We owe'],rows:rs.map(x=>[x.date,x.sup?x.sup.name:'-',U(x.total),U(x.paid),U(x.due)]),foot:['Total','','',U(sum(rs,x=>x.total)),U(sum(rs,x=>x.due))]})}
+  return o;
+}
+const fmtCell=c=>c&&typeof c==='object'?(c.f==='pct'?c.v.toFixed(1)+'%':usd(c.v)):esc(c);
+const isNum=(t,j)=>t.rows.some(r=>r[j]&&typeof r[j]==='object')||(t.rows.length&&t.rows.every(r=>typeof r[j]==='number'));
+function vRep(C){
+  const rep=buildReport(C);lastRep=rep;const r=curRange();
+  const ctrl='<div class="card noprint"><div class="f"><label>Report<select id="r_type">'+RTYPES.map(x=>'<option value="'+x[0]+'"'+(x[0]===R.type?' selected':'')+'>'+x[1]+'</option>').join('')+'</select></label>'+(R.type==='stmt'?'<label>Customer<select id="r_cust">'+S.customers.map(c=>'<option value="'+c.id+'"'+(String(c.id)===String(R.cust)?' selected':'')+'>'+esc(c.name)+'</option>').join('')+'</select></label>':'')+'</div>'+
+    '<div class="act"><button class="btn pri" data-print>Print / Save as PDF</button><button class="btn" data-act="repCsv">Export CSV</button></div></div>';
+  return '<h2 class="sec-title noprint">Reports</h2>'+periodBar()+ctrl+'<div class="printhead"><b style="font-size:20px">'+esc(S.settings.company)+'</b><div>'+esc(rep.title)+' &middot; '+r.from+' to '+r.to+'</div></div>'+
+   rep.tables.map(t=>'<div class="card"><h3><span>'+esc(t.title||rep.title)+'</span><span class="mut" style="text-transform:none;letter-spacing:0">'+r.from+' to '+r.to+'</span></h3>'+(t.rows.length?'<div class="scroll"><table><thead><tr>'+t.cols.map((c,j)=>'<th'+(isNum(t,j)?' class="r"':'')+'>'+c+'</th>').join('')+'</tr></thead><tbody>'+t.rows.map(rw=>'<tr>'+rw.map((c,j)=>'<td'+(isNum(t,j)?' class="r"':'')+'>'+(isNum(t,j)?'<span class="num">'+fmtCell(c)+'</span>':fmtCell(c))+'</td>').join('')+'</tr>').join('')+'</tbody>'+(t.foot?'<tfoot><tr>'+t.foot.map((c,j)=>'<td'+(isNum(t,j)?' class="r"':'')+'>'+(isNum(t,j)?'<span class="num">'+fmtCell(c)+'</span>':fmtCell(c))+'</td>').join('')+'</tr></tfoot>':'')+'</table></div>':'<div class="empty">No records in this period.</div>')+'</div>').join('');
+}
+const csvOf=rep=>{const q2=v=>'"'+String(v&&typeof v==='object'?v.v:v==null?'':v).replace(/"/g,'""')+'"';return '﻿'+rep.tables.map(t=>(t.title?q2(t.title)+'\n':'')+t.cols.map(q2).join(',')+'\n'+t.rows.map(r=>r.map(q2).join(',')).join('\n')+(t.foot?'\n'+t.foot.map(q2).join(','):'')).join('\n\n')};
+
+/* ================= settings ================= */
+function vSet(){
+  const s=S.settings,ta=(id,l,arr)=>'<label>'+l+'<textarea id="l_'+id+'" style="min-height:130px;font-family:var(--mono);font-size:13px" spellcheck="false">'+esc(arr.join('\n'))+'</textarea></label>';
+  return '<h2 class="sec-title">Settings</h2><form id="sform" style="display:flex;flex-direction:column;gap:16px">'+
+   '<div class="card"><h3><span>Company (printed on invoices)</span></h3><div class="f"><label>Company name<input id="s_company" value="'+esc(s.company)+'"></label><label>Tagline<input id="s_tagline" value="'+esc(s.tagline)+'"></label><label>Address<input id="s_address" value="'+esc(s.address)+'"></label>'+[0,1,2].map(i=>'<label>Phone '+(i+1)+'<input id="s_ph'+i+'" value="'+esc(s.phones[i]||'')+'"></label>').join('')+'</div></div>'+
+   '<div class="card"><h3><span>Money, numbering and calendar</span></h3><div class="f"><label>Default AFN per 1 USD (each invoice, payment, expense and purchase keeps its own rate)<input id="s_rate" type="number" step="any" value="'+s.rate+'"></label><label>Next invoice number<input id="s_next" type="number" value="'+s.nextInvoice+'"></label>'+
+   '<label>Calendar for reports<select id="s_cal"><option value="greg"'+(s.calendar==='greg'?' selected':'')+'>Gregorian</option><option value="jalali"'+(s.calendar==='jalali'?' selected':'')+'>Solar Hijri</option></select></label>'+
+   '<label>Financial year starts in month number (1 = January or Hamal)<input id="s_fiscal" type="number" min="1" max="12" value="'+s.fiscal+'"></label>'+
+   '<label>Shared purchase costs (transport, customs) are split<select id="s_alloc"><option value="qty"'+(s.alloc==='qty'?' selected':'')+'>Equally per item</option><option value="value"'+(s.alloc==='value'?' selected':'')+'>In proportion to price (by value)</option></select></label><label>Theme<select id="s_theme"><option value="auto"'+(s.theme==='auto'?' selected':'')+'>Auto (follow device)</option><option value="light"'+(s.theme==='light'?' selected':'')+'>Light</option><option value="dark"'+(s.theme==='dark'?' selected':'')+'>Dark</option></select></label></div></div>'+
+   '<div class="card"><h3><span>Your lists. One item per line.</span></h3><div class="grid g-auto">'+ta('types','Customer types',L('types'))+ta('pcats','Product categories',L('pcats'))+ta('units','Units of measure',L('units'))+ta('ecats','Expense categories',L('ecats'))+ta('methods','Payment methods',L('methods'))+ta('jtypes','Job types',L('jtypes'))+'</div></div>'+
+   '<div class="card"><div class="act" style="margin-top:0"><button class="btn pri" type="submit">Save settings</button><button class="btn" type="button" data-act="backup">Backup (save file)</button><button class="btn" type="button" data-act="restore">Restore backup</button><button class="btn" type="button" data-act="undo">Undo last restore / delete</button><input type="file" id="rfile" accept=".json,application/json" hidden><button class="btn" type="button" data-act="loadDemo">Load example data</button><button class="btn danger" type="button" data-act="reset">Delete all data</button></div>'+
+   '<p class="mut" style="font-size:12px;margin:12px 0 0">Everything saves automatically on this computer. It is not shared with other computers. <b>Storage:</b> <span id="stInfo"></span><br>Press Backup regularly (every week at least) and keep the file safe, for example in iCloud or on a USB stick. A damaged backup file is rejected and never changes your data. Before every Restore or Delete the current data is saved as a file and as an Undo copy.<br><b>How cost and profit work:</b> a purchase gives each container or stock item its price. Expenses linked to a container, job or purchase, and materials you use, are added to its real cost. When it goes on an invoice, profit = sale price - real cost. General expenses (rent, salaries) are deducted from profit in the period they happened. Purchases are not counted as expenses.</p></div></form>';
+}
+
+/* ================= render ================= */
+const TABS=[['dash','Dashboard'],['inv','Invoices'],['pay','Payments'],['cust','Customers'],['prod','Products'],['units','Containers'],['jobs','Jobs'],['stock','Stock'],['pur','Purchases'],['exp','Expenses'],['rep','Reports'],['set','Settings']];
+function setTabs(){const nav=$('#tabs');if(!nav.firstChild)nav.innerHTML=TABS.map(t=>'<button role="tab" data-tab="'+t[0]+'">'+t[1]+'</button>').join('')+'<span class="ind"></span>';const ind=$('.ind',nav);$$('button',nav).forEach(b=>{const on=b.dataset.tab===view;b.setAttribute('aria-selected',on);if(on){ind.style.left=b.offsetLeft+'px';ind.style.width=b.offsetWidth+'px'}})}
+function render(){
+  const C=calc(),root=$('#view');
+  $('#coName').textContent=S.settings.company;$('#hRec').textContent=usd(C.rec);$('#hStk').textContent=usd(C.stockVal);document.title=S.settings.company+' Business System';
+  setTabs();
+  const V={dash:vDash,inv:vInv,pay:vPay,cust:vCust,prod:vProd,units:vUnits,jobs:vJobs,stock:vStock,pur:vPur,exp:vExp,rep:vRep,set:vSet};
+  root.innerHTML=V[view](C);
+  if(view==='set'){const st=$('#stInfo');if(st){const u=storageInfo(),lb=lastBackup();if(ST.desktop){st.innerHTML='your data is stored in a real file on this computer: <b>'+esc(ST.info())+'</b>. There is no browser limit. A copy is kept automatically every day in the Backups folder next to it. Last backup file you saved: <b>'+(lastBackup()||'never')+'</b>. Still copy the whole folder to a USB stick or another drive now and then.'}else st.innerHTML='this system uses about '+u.kb.toLocaleString('en-US')+' KB of the roughly 5,000 KB that a browser allows ('+u.pct+'% full). Last backup file: <b>'+(lb||'never')+'</b>. Browsers (especially Safari on iPhone) can erase website data that is not used for a long time, so the backup file is your real protection.'}}
+  Array.from(root.children).forEach((c,i)=>c.style.setProperty('--i',i));$$('.stag',root).forEach((c,i)=>c.style.setProperty('--i',i));
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{$$('.bz .b[data-w]',root).forEach(e=>e.style.width=e.dataset.w+'%');$$('.mb',root).forEach(e=>e.style.transform='scaleY(1)')}));
+}
+function renderTable(){const C=calc(),t=$('#tbl');if(!t)return;
+  const m={inv:()=>table(invCols,invRows(C)),pay:()=>table(payCols,payRows(C)),cust:()=>table(custCols,custRows(C)),prod:()=>table(prodCols,prodRows(C)),units:()=>table(unitCols,unitRows(C)),jobs:()=>table(jobCols,jobRows(C)),exp:()=>{const rows=expRows(C);return table(expCols,rows,['Total shown','','','','',num(usd(sum(rows,r=>r.e.usd)),'neg')])}};
+  if(!m[view]){render();const i=$('#q');if(i){i.focus();i.setSelectionRange(q.length,q.length)}return}
+  t.innerHTML=m[view]()}
+
+/* ================= events ================= */
+document.addEventListener('pointermove',e=>{const c=e.target.closest&&e.target.closest('.card');if(!c)return;const r=c.getBoundingClientRect();c.style.setProperty('--mx',(e.clientX-r.left)+'px');c.style.setProperty('--my',(e.clientY-r.top)+'px')});
+document.addEventListener('click',e=>{
+  const t=e.target;if(t.id==='ov'){closeModal();return}
+  let el;
+  if(t.closest('[data-x]')){closeModal();return}
+  if(t.closest('[data-print]')){window.print();return}
+  if(el=t.closest('[data-del]')){const[n,id]=el.dataset.del.split(':');confirmBtn(el,'Click again to delete',()=>doDelete(n,+id));return}
+  if(el=t.closest('[data-pay]')){const iv=+el.dataset.pay;closeModal();openEntity('payments',null,{invoiceId:iv});const x=calc().im[iv];if(x){$('#f_amount').value=Math.max(0,x.bal).toFixed(2);$('#f_rate').value=x.i.rate}return}
+  if(el=t.closest('[data-editinv]')){const id=+el.dataset.editinv;closeModal();openInvoice(id);return}
+  if(el=t.closest('[data-addexp]')){const[ty,id]=el.dataset.addexp.split(':');closeModal();openEntity('expenses',null,{linkType:ty,linkId:+id});return}
+  if(el=t.closest('[data-addmat]')){const[ty,id]=el.dataset.addmat.split(':');closeModal();openEntity('materials',null,{targetType:ty,targetId:+id});return}
+  if(el=t.closest('[data-stmt]')){e.stopPropagation();R.type='stmt';R.cust=el.dataset.stmt;view='rep';render();window.scrollTo({top:0});return}
+  if(el=t.closest('[data-tab]')){view=el.dataset.tab;q='';fil='all';render();window.scrollTo({top:0,behavior:'smooth'});return}
+  if(el=t.closest('[data-sub]')){sub=el.dataset.sub;q='';render();return}
+  if(el=t.closest('[data-fil]')){fil=el.dataset.fil;render();const i=$('#q');if(i)i.value=q;return}
+  if(el=t.closest('[data-cal]')){S.settings.calendar=el.dataset.cal;save();render();return}
+  if(el=t.closest('[data-new]')){openEntity(el.dataset.new);return}
+  if(el=t.closest('[data-inv]')){openInvoiceDoc(+el.dataset.inv);return}
+  if(el=t.closest('[data-pur]')){openPurchase(+el.dataset.pur);return}
+  if(el=t.closest('[data-unit]')){openUnit(+el.dataset.unit);return}
+  if(el=t.closest('[data-job]')){openJob(+el.dataset.job);return}
+  if(el=t.closest('[data-edit]')){const[n,id]=el.dataset.edit.split(':');closeModal();openEntity(n,+id);return}
+  if(t.id==='fab'){openInvoice();return}
+  if(el=t.closest('[data-act]')){ACT[el.dataset.act]&&ACT[el.dataset.act](el)}
+});
+function doDelete(n,id){
+  const C=calc();
+  if(n==='invoices'){S.payments=S.payments.filter(p=>p.invoiceId!==id);S.expenses.forEach(x=>{if(x.linkType==='invoice'&&x.linkId===id){x.linkType='none';x.linkId=''}})}
+  if(n==='units'){const u=C.um[id];if(u&&u.soldInv){toast('This container is on an invoice. Remove it from the invoice first.');return}if(u&&u.pu){toast('This container came from a purchase. Edit the purchase to remove it.');return}S.expenses.forEach(x=>{if(x.linkType==='unit'&&x.linkId===id){x.linkType='none';x.linkId=''}});S.materials=S.materials.filter(m=>!(m.targetType==='unit'&&m.targetId===id))}
+  if(n==='jobs'){const j=C.jm[id];if(j&&j.soldInv){toast('This job is on an invoice. Remove it from the invoice first.');return}S.expenses.forEach(x=>{if(x.linkType==='job'&&x.linkId===id){x.linkType='none';x.linkId=''}});S.materials=S.materials.filter(m=>!(m.targetType==='job'&&m.targetId===id))}
+  if(n==='purchases'){const pu=C.pum[id];if(pu&&S.units.some(u=>u.purchaseId===id&&C.um[u.id].soldInv)){toast('Some containers from this purchase are already sold.');return}S.units=S.units.filter(u=>u.purchaseId!==id);S.expenses.forEach(x=>{if(x.linkType==='purchase'&&x.linkId===id){x.linkType='none';x.linkId=''}})}
+  S[n]=S[n].filter(x=>x.id!==id);save();closeModal();render();toast('Deleted');
+}
+const ACT={
+  newInv:()=>openInvoice(),newPur:()=>openPurchase(),
+  clearDemo(){keepUndo('clear');const st=S.settings;S=blank();S.settings=st;S.settings.nextInvoice=1;save();render();toast('Examples cleared. Invoices now start from 1.')},
+  loadDemo(){if(S.invoices.length||S.customers.length||S.expenses.length){toast('Delete all data first to load the examples');return}keepUndo('demo');const st=S.settings;demo();S.settings=Object.assign(S.settings,{company:st.company,calendar:st.calendar,fiscal:st.fiscal,theme:st.theme});save();render();toast('Example data loaded')},
+  reset(el){confirmBtn(el,'Click again to delete everything',()=>{backupFile('before-delete');keepUndo('delete');const st=S.settings;S=blank();S.settings=st;S.settings.nextInvoice=1;save();render();toast('All data deleted')})},
+  backup(){backupFile('backup')},
+  undo(){let u=null;try{u=JSON.parse(ST.get(UNDO))}catch(e){}const prev=S;if(!u||!adopt(u.data)){S=prev;toast('Nothing to undo');return}applyTheme();saveNow();render();toast('Previous data brought back')},
+  restore(){$('#rfile').click()},
+  repCsv(){file('report-'+R.type+'-'+today()+'.csv',csvOf(lastRep),'text/csv')}
+};
+function hash(str){let h=5381;for(let i=0;i<str.length;i++)h=((h<<5)+h+str.charCodeAt(i))|0;return (h>>>0).toString(16)}
+function makeBackup(){const n=k=>(S[k]||[]).length;return JSON.stringify({meta:{app:'NEW LEMAR Business System',format:3,exportedAt:new Date().toISOString(),counts:{invoices:n('invoices'),customers:n('customers'),products:n('products'),suppliers:n('suppliers'),payments:n('payments'),purchases:n('purchases'),expenses:n('expenses'),units:n('units'),jobs:n('jobs'),materials:n('materials'),adjust:n('adjust')},check:hash(JSON.stringify(S))},data:S},null,1)}
+function backupFile(tag){if(NL_SHARE&&tag!=='backup')return;file('newlemar-'+tag+'-'+today()+'-'+new Date().toTimeString().slice(0,5).replace(':','')+'.json',makeBackup(),'application/json');try{ST.set(KEY0+'_lastbackup',today())}catch(e){}}
+/* Reads a backup text. Returns {d} or {err}. Accepts the new wrapped format and older plain files. */
+function readBackup(text){let d;try{d=JSON.parse(text)}catch(e){return {err:'The file is damaged (it cannot be read).'}}
+  if(d&&d.meta&&d.data){if(d.meta.check&&d.meta.check!==hash(JSON.stringify(d.data)))return {err:'The file was changed or is damaged (the safety check does not match).'};
+    if(d.meta.counts){for(const k in d.meta.counts){if(((d.data[k]||[]).length)!==d.meta.counts[k])return {err:'The file is incomplete: the number of '+k+' does not match.'}}}
+    d=d.data}
+  const err=validateBackup(d,true);return err?{err}:{d}}
+const NL_SHARE=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+function file(name,text,mime){
+  if(NL_SHARE&&navigator.canShare){try{const f=new File([text],name,{type:mime||'application/octet-stream'});
+    if(navigator.canShare({files:[f]})){navigator.share({files:[f],title:name}).then(()=>toast('Saved. Choose Save to Files to keep it.'),e=>{if(!e||e.name!=='AbortError')dlFile(name,text,mime)});return}}catch(e){}}
+  dlFile(name,text,mime)}
+function dlFile(name,text,mime){try{const bl=new Blob([text],{type:mime}),u=URL.createObjectURL(bl),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(u);a.remove()},1500);toast('File saved to Downloads')}catch(e){toast('Saving files is not available here')}}
+document.addEventListener('input',e=>{
+  if(e.target.id==='q'){q=e.target.value;renderTable()}
+  if(e.target.type==='date')refreshJal();
+});
+document.addEventListener('change',e=>{
+  const id=e.target.id;
+  if(id==='rfile'&&e.target.files[0]){const f=e.target.files[0],rd=new FileReader();rd.onerror=()=>toast('The file could not be read. Nothing was changed.');rd.onload=()=>{
+    const rb=readBackup(rd.result);let err=rb.err||null,d=rb.d;
+    if(!err){const keep=S,kcc=CC;if(!adopt(d,true))err='The file failed the safety check.';S=keep;CC=kcc}
+    if(err){toast('Rejected: '+err+' Your data was not changed.');return}
+    const a=summary(d),b=summary(S);
+    openModal('Restore this backup?','<p class="mut" style="margin:0 0 10px">The file passed all checks. Restoring replaces the data on this computer. Your current data is saved first as an Undo copy (and as a file download on computers), so nothing is lost.</p><div class="scroll"><table><thead><tr><th></th><th class="r">Invoices</th><th class="r">Customers</th><th class="r">Containers</th><th class="r">Purchases</th><th class="r">Expenses</th><th>Invoice dates</th></tr></thead><tbody><tr><td><b>Backup file</b></td><td class="r">'+a.inv+'</td><td class="r">'+a.cust+'</td><td class="r">'+a.units+'</td><td class="r">'+a.pur+'</td><td class="r">'+a.exp+'</td><td>'+a.from+' to '+a.to+'</td></tr><tr><td><b>Current data</b></td><td class="r">'+b.inv+'</td><td class="r">'+b.cust+'</td><td class="r">'+b.units+'</td><td class="r">'+b.pur+'</td><td class="r">'+b.exp+'</td><td>'+b.from+' to '+b.to+'</td></tr></tbody></table></div>',()=>{
+      const prev=S,pcc=CC;backupFile('before-restore');const undoOk=keepUndo('restore');
+      if(!adopt(d,true)){S=prev;CC=pcc;toast('Restore failed. Your data was not changed.');return}
+      if(persist()!==true){S=prev;CC=pcc;toast('Restore failed: the browser could not store it. Your data was not changed.');return}
+      applyTheme();render();setSave('Saved in this browser','ok');toast(undoOk?'Backup restored. Undo is available in Settings.':'Backup restored. (Undo copy did not fit in browser storage; use the downloaded file.)')},{submit:'Restore'})};rd.readAsText(f);e.target.value=''}
+  if(id==='r_type'){R.type=e.target.value;render()}
+  if(id==='r_cust'){R.cust=e.target.value;render()}
+  if(id==='p_preset'){P.preset=e.target.value;if(P.preset==='custom'){const r=rangeFor('month',cal(),S.settings.fiscal,S);P.from=P.from||r.from;P.to=P.to||r.to}render()}
+  if(id==='p_from'||id==='p_to'){P[id.slice(2)]=e.target.value;render()}
+  if(id==='p_cmp'){P.compare=e.target.checked;render()}
+  if(id==='f_invoiceId'&&mHandler&&$('#f_rate')&&$('#f_amount')){const x=calc().im[+e.target.value];if(x)$('#f_rate').value=x.i.rate}
+});
+document.addEventListener('submit',e=>{
+  e.preventDefault();
+  if(e.target.id==='mform'){if(mHandler&&mHandler()!==false)closeModal()}
+  else if(e.target.id==='sform'){
+    const s=S.settings,v=id=>$('#'+id).value;
+    s.company=v('s_company').trim()||'NEW LEMAR';s.tagline=v('s_tagline');s.address=v('s_address');s.phones=[v('s_ph0'),v('s_ph1'),v('s_ph2')].map(x=>x.trim());
+    const rt=parseFloat(v('s_rate'));if(rt>0)s.rate=rt;const n=parseInt(v('s_next'));if(n>0)s.nextInvoice=n;s.theme=v('s_theme');s.alloc=v('s_alloc')==='value'?'value':'qty';s.calendar=v('s_cal');const fy=parseInt(v('s_fiscal'));if(fy>=1&&fy<=12)s.fiscal=fy;
+    ['types','pcats','units','ecats','methods','jtypes'].forEach(k=>{const el=$('#l_'+k);if(!el)return;const seen={},arr=[];el.value.split('\n').forEach(x=>{x=x.trim();if(x&&!seen[x]){seen[x]=1;arr.push(x)}});if(arr.length)s.lists[k]=arr});
+    applyTheme();save();render();toast('Settings saved')}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+window.addEventListener('resize',setTabs);
+
+/* ================= boot ================= */
+function boot(){
+  try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
+  let ok=false,raw=null,bad=false;try{raw=ST.get(KEY)}catch(e){}
+  if(raw){try{ok=adopt(JSON.parse(raw))}catch(e){}
+    if(!ok){bad=true;try{ST.set(KEY0+'_rescue_'+Date.now(),raw)}catch(e){}}
+    else{try{const a=ST.get(KEY0+'_auto_at')||'',t=new Date().toISOString().slice(0,10);if(a!==t){ST.set(KEY0+'_auto',raw);ST.set(KEY0+'_auto_at',t)}}catch(e){}}}
+  if(!ok){demo();DEMO_UNSAVED=true;setSave(bad?'Stored data could not be read. A rescue copy was kept. Nothing was overwritten.':'Example data, not saved yet','')}else setSave('Loaded from this browser','ok');
+  applyTheme();render();
+}
+boot();
+window.__NL={flush(){if(saveT)saveNow()},get S(){return S},render,calc,ACT,openInvoice,openEntity,openPurchase,P,R,rangeFor,g2j,j2g,statsFor,syncUnits,save,adopt,migrate};
+})();
+</script>
+<script>
+if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}
+</script>
+</body></html>
