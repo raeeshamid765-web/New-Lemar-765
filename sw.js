@@ -1,5 +1,5 @@
 /* NEW LEMAR offline cache. Change VERSION whenever index.html changes so phones pick up the update. */
-const VERSION='nl-2.2.0';
+const VERSION='nl-5.2.1';
 const FILES=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(VERSION).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==VERSION).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
